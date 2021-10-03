@@ -80,7 +80,7 @@ M.plugins = {
          enable_git = 0,
       },
       luasnip = {
-         snippet_path = {},
+         snippet_path = {"~/.local/share/nvim/site/pack/packer/opt/friendly-snippets", "./lua/custom/snippets"},
       },
       statusline = { -- statusline related options
          -- these are filetypes, not pattern matched
