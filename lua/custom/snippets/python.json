@@ -1,7 +1,7 @@
 {
-    "website": {
-        "prefix": "web",
-        "body": "www.jrodal.com\n$0",
+    "shebang": {
+        "prefix": "shebang",
+        "body": ["#!/usr/bin/env python3", "www.jrodal.com", "", "$0"],
         "description" : "Adds shebang line for default python 3 interpreter."
     }
 }
