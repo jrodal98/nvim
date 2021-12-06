@@ -12,7 +12,7 @@ M.autopairs = function()
    autopairs.setup()
    autopairs_completion.setup {
       map_complete = true, -- insert () func completion
-      map_cr = true,
+      map_cr = false,
    }
 end
 
