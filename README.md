@@ -1,6 +1,6 @@
 # Neovim [![NVIM Docker Image CI](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml/badge.svg)](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml)
 
-My neovim configuration, based on NvChad. Requires nvim >= v0.5
+My neovim configuration, based on [NvChad](https://github.com/NvChad/NvChad). Requires nvim >= v0.6
 
 ## Install
 

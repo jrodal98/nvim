@@ -1,10 +1,8 @@
--- IMPORTANT NOTE : This is default config, so dont change anything here.
--- use custom/chadrc.lua instead
-
 local M = {}
-M.options, M.ui, M.mappings, M.plugins = {}, {}, {}, {}
 
--- non plugin normal, available without any plugins
+local plugin_conf = require "custom.plugins.configs"
+local userPlugins = require "custom.plugins"
+
 M.options = {
    -- NeoVim/Vim options
    clipboard = "unnamedplus",
@@ -12,6 +10,7 @@ M.options = {
    ruler = false,
    hidden = true,
    ignorecase = true,
+   smartcase = true,
    mapleader = " ",
    mouse = "a",
    number = true,
@@ -26,13 +25,13 @@ M.options = {
    -- interval for writing swap file to disk, also used by gitsigns
    updatetime = 250,
    undofile = true, -- keep a permanent undo (across restarts)
+   fillchars = { eob = " " },
    -- NvChad options
    nvChad = {
       copy_cut = false, -- copy cut text ( x key ), visual and normal mode
       copy_del = false, -- copy deleted text ( dd key ), visual and normal mode
       insert_nav = true, -- navigation in insertmode
       window_nav = true,
-      theme_toggler = false,
       -- used for updater
       update_url = "https://github.com/NvChad/NvChad",
       update_branch = "main",
@@ -41,14 +40,10 @@ M.options = {
 
 -- ui configs
 M.ui = {
+   hl_override = "", -- path of your file that contains highlights
    italic_comments = false,
    -- theme to be used, check available themes with `<leader> + t + h`
    theme = "tokyonight",
-   -- toggle between two themes, see theme_toggler mappings
-   theme_toggler = {
-      "onedark",
-      "gruvchad",
-   },
    -- Enable this only if your terminal has the colorscheme set which nvchad uses
    -- For Ex : if you have onedark set in nvchad, set onedark's bg color on your terminal
    transparency = false,
@@ -63,24 +58,33 @@ M.plugins = {
       colorizer = false, -- color RGB, HEX, CSS, NAME color codes
       comment = true, -- easily (un)comment code, language aware
       dashboard = true, -- NeoVim 'home screen' on open
-      esc_insertmode = true, -- map to <ESC> with no lag
+      better_escape = true, -- map to <ESC> with no lag
       feline = true, -- statusline
       gitsigns = true, -- gitsigns in statusline
       lspsignature = true, -- lsp enhancements
-      telescope_media = false, -- media previews within telescope finders
       vim_matchup = true, -- % operator enhancements
+      snippets = true,
       cmp = true,
       nvimtree = true,
+      autopairs = true,
    },
    options = {
+      packer = {
+         init_file = "plugins.packerInit",
+      },
+      autopairs = { loadAfter = "nvim-cmp" },
+      cmp = {
+         lazy_load = true,
+      },
       lspconfig = {
          setup_lspconf = "custom.plugins.lspconfig", -- path of file containing setups of different lsps
       },
       nvimtree = {
-         enable_git = 0,
+         -- packerCompile required after changing lazy_load
+         lazy_load = true,
       },
       luasnip = {
-         snippet_path = {"~/.local/share/nvim/site/pack/packer/opt/friendly-snippets", "./lua/custom/snippets"},
+         snippet_path = {"./lua/custom/snippets"},
       },
       statusline = { -- statusline related options
          -- these are filetypes, not pattern matched
@@ -93,13 +97,16 @@ M.plugins = {
          },
          -- show short statusline on small screens
          shortline = true,
-         shown = {},
          -- default, round , slant , block , arrow
          style = "default",
       },
       esc_insertmode_timeout = 300,
    },
-   default_plugin_config_replace = {},
+   default_plugin_config_replace = {
+      nvim_treesitter = plugin_conf.treesitter,
+   },
+
+  install = userPlugins,
 }
 
 -- mappings -- don't use a single keymap twice --
@@ -107,13 +114,16 @@ M.plugins = {
 M.mappings = {
    -- custom = {}, -- all custom user mappings
    -- close current focused buffer
-   close_buffer = "<leader>x",
-   copy_whole_file = "<leader>a", -- copy all contents of the current buffer
-   line_number_toggle = "<leader>n", -- show or hide line number
-   new_buffer = "<S-t>", -- open a new buffer
-   new_tab = "<C-t>b", -- open a new vim tab
-   save_file = "<leader>w", -- save file using :w
-   theme_toggler = "<leader>ts", -- for theme toggler, see in ui.theme_toggler
+   misc = {
+      cheatsheet = "<leader>ch",
+      close_buffer = "<leader>x",
+      copy_whole_file = "<leader>a", -- copy all contents of current buffer
+      line_number_toggle = "<leader>n", -- toggle line number
+      update_nvchad = "<leader>uu",
+      new_buffer = "<S-t>",
+      new_tab = "<C-t>b",
+      save_file = "<leader>w", -- save file using :w
+   },
    -- navigation in insert mode, only if enabled in options
    insert_nav = {
       backward = "<C-h>",
@@ -144,8 +154,6 @@ M.mappings = {
       new_vertical = "<leader>tv",
       new_window = "<leader>tt",
    },
-   -- update nvchad from nvchad, chadness 101
-   update_nvchad = "<leader>uu",
 }
 
 -- all plugins related mappings
@@ -171,6 +179,26 @@ M.mappings.plugins = {
    better_escape = { -- <ESC> will still work
       esc_insertmode = { "jk" }, -- multiple mappings allowed
    },
+
+   lspconfig = {
+      declaration = "gD",
+      definition = "gd",
+      hover = "K",
+      implementation = "gi",
+      signature_help = "gk",
+      add_workspace_folder = "<leader>wa",
+      remove_workspace_folder = "<leader>wr",
+      list_workspace_folders = "<leader>wl",
+      type_definition = "<leader>D",
+      rename = "<leader>rn",
+      code_action = "<leader>ca",
+      references = "gr",
+      float_diagnostics = "ge",
+      goto_prev = "[d",
+      goto_next = "]d",
+      set_loclist = "<leader>q",
+      formatting = "<leader>fm",
+   },
    -- file explorer/tree
    nvimtree = {
       toggle = "<C-n>",
@@ -187,10 +215,6 @@ M.mappings.plugins = {
       live_grep = "<leader>fw",
       oldfiles = "<leader>fo",
       themes = "<leader>ts", -- NvChad theme picker
-      -- media previews within telescope finders
-      telescope_media = {
-         media_files = "<leader>fp",
-      },
    },
 }
 

@@ -19,12 +19,4 @@ M.setup_lsp = function(attach, capabilities)
    end
 end
 
---    -- typescript 
--- 
---   lspconfig.tsserver.setup {
---       cmd = { "typescript-language-server", "--stdio" },
---       filetypes = {"typescriptreact", "typescript.tsx"},
---       root_dir = root_pattern("package.json", "tsconfig.json")
---     }
-    
 return M
