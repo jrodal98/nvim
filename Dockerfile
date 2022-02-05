@@ -1,8 +1,8 @@
 FROM alpine:edge
 
-RUN apk --no-cache add git neovim bash nodejs npm ripgrep alpine-sdk
+RUN apk --no-cache add git neovim bash nodejs npm ripgrep alpine-sdk shfmt stylua black shellcheck
 
-RUN npm install -g pyright bash-language-server dockerfile-language-server-nodejs
+RUN npm install -g pyright bash-language-server dockerfile-language-server-nodejs prettier @fsouza/prettierd
 
 WORKDIR /root/.config/nvim
 
