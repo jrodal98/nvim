@@ -84,7 +84,7 @@ M.plugins = {
          lazy_load = true,
       },
       luasnip = {
-         snippet_path = {"./lua/custom/snippets"},
+         snippet_path = { "./lua/custom/snippets" },
       },
       statusline = { -- statusline related options
          -- these are filetypes, not pattern matched
@@ -106,7 +106,7 @@ M.plugins = {
       nvim_treesitter = plugin_conf.treesitter,
    },
 
-  install = userPlugins,
+   install = userPlugins,
 }
 
 -- mappings -- don't use a single keymap twice --
