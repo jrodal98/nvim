@@ -1,0 +1,6 @@
+#!/bin/bash
+
+stylua lua/custom
+git add lua/custom
+
+echo "formatted lua files"
