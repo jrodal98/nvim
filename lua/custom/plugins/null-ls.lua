@@ -18,7 +18,8 @@ local sources = {
    -- Shell
    -- sudo pacman -Syu shfmt
    -- brew install shfmt
-   b.formatting.shfmt,
+   -- closely follows Google's standards
+   b.formatting.shfmt.with { extra_args = { "-i", "2", "-ci", "-bn"} },
 
    -- sudo pacman -Syu shellcheck
    -- brew install shellcheck
