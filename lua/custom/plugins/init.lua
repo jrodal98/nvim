@@ -22,12 +22,6 @@ return {
    },
 
    {
-      -- sane copy-paste logic
-      "svermeulen/vim-cutlass",
-      event = "BufRead",
-   },
-
-   {
       -- lsp-like things (formatting, linting, diagnostics)
       "jose-elias-alvarez/null-ls.nvim",
       after = "nvim-lspconfig",

@@ -28,7 +28,7 @@ M.options = {
    fillchars = { eob = " " },
    -- NvChad options
    nvChad = {
-      copy_cut = false, -- copy cut text ( x key ), visual and normal mode
+      copy_cut = true, -- copy cut text ( x key ), visual and normal mode
       copy_del = false, -- copy deleted text ( dd key ), visual and normal mode
       insert_nav = true, -- navigation in insertmode
       window_nav = true,

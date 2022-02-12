@@ -3,7 +3,6 @@ local map = require("core.utils").map
 -- formatting
 map("n", "<leader>fm", "<cmd>lua vim.lsp.buf.formatting()<CR>")
 
--- cutlass
 -- next four map x to d.
 map("n", "x", "d", { noremap = true })
 map("x", "x", "d", { noremap = true })
