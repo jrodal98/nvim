@@ -43,4 +43,9 @@ return {
       "tpope/vim-repeat",
       event = "BufRead",
    },
+
+   -- vscode lightbulb for code actions
+   {
+      "kosayoda/nvim-lightbulb",
+   },
 }
