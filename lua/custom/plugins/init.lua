@@ -47,6 +47,7 @@ return {
    -- vscode lightbulb for code actions
    {
       "kosayoda/nvim-lightbulb",
+      after = "nvim-lspconfig",
    },
 
    {
