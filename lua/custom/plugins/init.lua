@@ -82,4 +82,12 @@ return {
       "p00f/nvim-ts-rainbow",
       after = "nvim-treesitter",
    },
+   {
+      -- swap arguments
+      "mizlan/iswap.nvim",
+      after = "nvim-treesitter",
+      config = function()
+         require "custom.plugins.iswap"
+      end,
+   },
 }
