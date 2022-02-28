@@ -58,4 +58,13 @@ return {
          require "custom.plugins.dial"
       end,
    },
+   -- uses the sign column to indicate added, modified and removed lines
+   -- in a file that is managed by a version control system
+   {
+      "mhinz/vim-signify",
+      event = "BufRead",
+      config = function()
+         require "custom.plugins.signify"
+      end,
+   },
 }
