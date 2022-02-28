@@ -70,4 +70,11 @@ return {
          require "custom.plugins.signify"
       end,
    },
+   {
+      "jbyuki/venn.nvim",
+      event = "BufRead",
+      config = function()
+         require "custom.plugins.venn"
+      end,
+   },
 }
