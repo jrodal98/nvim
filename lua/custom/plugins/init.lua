@@ -77,4 +77,9 @@ return {
          require "custom.plugins.venn"
       end,
    },
+   {
+      -- rainbow parentheses
+      "p00f/nvim-ts-rainbow",
+      after = "nvim-treesitter",
+   },
 }
