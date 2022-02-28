@@ -48,4 +48,13 @@ return {
    {
       "kosayoda/nvim-lightbulb",
    },
+
+   {
+      -- better increment/decrement logic
+      "monaqa/dial.nvim",
+      event = "BufRead",
+      setup = function()
+         require "custom.plugins.dial"
+      end,
+   },
 }
