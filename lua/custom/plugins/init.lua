@@ -48,6 +48,9 @@ return {
    {
       "kosayoda/nvim-lightbulb",
       after = "nvim-lspconfig",
+      config = function()
+         vim.cmd [[autocmd CursorHold,CursorHoldI * lua require'nvim-lightbulb'.update_lightbulb()]]
+      end,
    },
 
    {
