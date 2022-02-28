@@ -19,11 +19,15 @@ local sources = {
    -- sudo pacman -Syu shfmt
    -- brew install shfmt
    -- closely follows Google's standards
-   b.formatting.shfmt.with { extra_args = { "-i", "2", "-ci", "-bn"} },
+   b.formatting.shfmt.with { extra_args = { "-i", "2", "-ci", "-bn" } },
 
    -- sudo pacman -Syu shellcheck
    -- brew install shellcheck
    b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
+
+   -- Offers prose suggestions on markdown and tex
+   -- pip install --user proselint
+   b.diagnostics.proselint,
 }
 
 local M = {}

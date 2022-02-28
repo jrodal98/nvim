@@ -54,7 +54,7 @@ return {
       -- better increment/decrement logic
       "monaqa/dial.nvim",
       event = "BufRead",
-      setup = function()
+      config = function()
          require "custom.plugins.dial"
       end,
    },
