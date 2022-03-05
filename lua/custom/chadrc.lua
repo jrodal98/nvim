@@ -165,7 +165,7 @@ M.mappings.plugins = {
    },
    -- easily (un)comment code, language aware
    comment = {
-      toggle = "<leader>/", -- toggle comment (works on multiple lines)
+      toggle = "gc", -- toggle comment (works on multiple lines)
    },
    -- NeoVim 'home screen' on open
    dashboard = {

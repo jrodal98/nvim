@@ -90,4 +90,12 @@ return {
          require "custom.plugins.iswap"
       end,
    },
+   -- yank with osc, which allows yanking from remote machines
+   {
+      "ojroques/vim-oscyank",
+      config = function()
+         require("core.utils").map("v", "<leader>y", ":OSCYank <CR>")
+      end,
+      event = "BufRead",
+   },
 }
