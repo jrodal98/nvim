@@ -98,4 +98,16 @@ return {
       end,
       event = "BufRead",
    },
+   -- copy vim statusline into tmux statusline
+   {
+      "vimpostor/vim-tpipeline",
+      config = function()
+         vim.cmd [[
+          if system('pgrep tmux')
+            " prevent statusline duplication when tmux is running
+            autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=0
+          endif
+        ]]
+      end,
+   },
 }
