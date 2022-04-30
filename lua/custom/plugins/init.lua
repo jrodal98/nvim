@@ -75,14 +75,6 @@ return {
       "p00f/nvim-ts-rainbow",
       after = "nvim-treesitter",
    },
-   {
-      -- swap arguments
-      "mizlan/iswap.nvim",
-      after = "nvim-treesitter",
-      config = function()
-         require "custom.plugins.iswap"
-      end,
-   },
    -- yank with osc, which allows yanking from remote machines
    {
       "ojroques/vim-oscyank",
@@ -101,6 +93,14 @@ return {
             autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=0
           endif
         ]]
+      end,
+   },
+   {
+      -- swap arguments
+      "nvim-treesitter/nvim-treesitter-textobjects",
+      after = "nvim-treesitter",
+      config = function()
+         require "custom.plugins.nvim-treesitter-textobjects"
       end,
    },
 }
