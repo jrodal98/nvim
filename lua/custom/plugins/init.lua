@@ -71,13 +71,6 @@ return {
       end,
    },
    {
-      "jbyuki/venn.nvim",
-      event = "BufRead",
-      config = function()
-         require "custom.plugins.venn"
-      end,
-   },
-   {
       -- rainbow parentheses
       "p00f/nvim-ts-rainbow",
       after = "nvim-treesitter",
