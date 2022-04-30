@@ -1,4 +1,4 @@
-# Neovim [![NVIM Docker Image CI](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml/badge.svg)](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml)
+# Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.7.0-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim) [![NVIM Docker Image CI](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml/badge.svg)](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml)
 
 My neovim configuration, based on [NvChad](https://github.com/NvChad/NvChad). Requires nvim >= v0.7
 
