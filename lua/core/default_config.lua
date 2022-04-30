@@ -26,6 +26,7 @@ M.options = {
    updatetime = 250,
    undofile = true,
    fillchars = { eob = " " },
+   shadafile = vim.opt.shadafile,
 
    -- NvChad options
    nvChad = {
@@ -33,10 +34,32 @@ M.options = {
       copy_del = true, -- copy deleted text ( dd key ), visual and normal mode
       insert_nav = true, -- navigation in insertmode
       window_nav = true,
+      terminal_numbers = false,
 
       -- updater
       update_url = "https://github.com/NvChad/NvChad",
       update_branch = "main",
+   },
+   terminal = {
+      behavior = {
+         close_on_exit = true,
+      },
+      window = {
+         vsplit_ratio = 0.5,
+         split_ratio = 0.4,
+      },
+      location = {
+         horizontal = "rightbelow",
+         vertical = "rightbelow",
+         float = {
+           relative = 'editor',
+           row = 0.3,
+           col = 0.25,
+           width = 0.5,
+           height = 0.4,
+           border = "single",
+         }
+      },
    },
 }
 
@@ -44,6 +67,7 @@ M.options = {
 
 M.ui = {
    hl_override = "", -- path of your file that contains highlights
+   colors = "", -- path of your file that contains colors
    italic_comments = false,
    theme = "onedark", -- default theme
 
@@ -55,20 +79,42 @@ M.ui = {
 ---- PLUGIN OPTIONS ----
 
 M.plugins = {
+
+   -- builtin nvim plugins are disabled
+   builtins = {
+      "2html_plugin",
+      "getscript",
+      "getscriptPlugin",
+      "gzip",
+      "logipat",
+      "netrw",
+      "netrwPlugin",
+      "netrwSettings",
+      "netrwFileHandlers",
+      "matchit",
+      "tar",
+      "tarPlugin",
+      "rrhelper",
+      "spellfile_plugin",
+      "vimball",
+      "vimballPlugin",
+      "zip",
+      "zipPlugin",
+   },
+
    -- enable/disable plugins (false for disable)
    status = {
       blankline = true, -- indentline stuff
       bufferline = true, -- manage and preview opened buffers
       colorizer = false, -- color RGB, HEX, CSS, NAME color codes
       comment = true, -- easily (un)comment code, language aware
-      dashboard = false,
+      alpha = false, -- dashboard
       better_escape = true, -- map to <ESC> with no lag
       feline = true, -- statusline
       gitsigns = true,
       lspsignature = true, -- lsp enhancements
       vim_matchup = true, -- improved matchit
       cmp = true,
-      snippets = false,
       nvimtree = true,
       autopairs = true,
    },
@@ -91,12 +137,13 @@ M.plugins = {
          snippet_path = {},
       },
       statusline = {
+         hide_disable = false,
          -- hide, show on specific filetypes
          hidden = {
             "help",
-            "dashboard",
             "NvimTree",
             "terminal",
+            "alpha",
          },
          shown = {},
 
@@ -107,6 +154,7 @@ M.plugins = {
       esc_insertmode_timeout = 300,
    },
    default_plugin_config_replace = {},
+   default_plugin_remove = {},
    install = nil,
 }
 
@@ -121,8 +169,9 @@ M.mappings = {
    misc = {
       cheatsheet = "<leader>ch",
       close_buffer = "<leader>x",
-      copy_whole_file = "<C-a>", -- copy all contents of current buffer
-      line_number_toggle = "<leader>n", -- toggle line number
+      cp_whole_file = "<C-c>", -- copy all contents of current buffer
+      lineNR_toggle = "<leader>n", -- toggle line number
+      lineNR_rel_toggle = "<leader>rn",
       update_nvchad = "<leader>uu",
       new_buffer = "<S-t>",
       new_tab = "<C-t>b",
@@ -135,8 +184,8 @@ M.mappings = {
       backward = "<C-h>",
       end_of_line = "<C-e>",
       forward = "<C-l>",
-      next_line = "<C-k>",
-      prev_line = "<C-j>",
+      next_line = "<C-j>",
+      prev_line = "<C-k>",
       beginning_of_line = "<C-a>",
    },
 
@@ -160,10 +209,16 @@ M.mappings = {
       -- show & recover hidden terminal buffers in a telescope picker
       pick_term = "<leader>W",
 
-      -- spawn terminals
+      -- spawn a single terminal and toggle it
+      -- this just works like toggleterm kinda
       new_horizontal = "<leader>h",
       new_vertical = "<leader>v",
-      new_window = "<leader>w",
+      new_float = "<A-i>",
+
+      -- spawn new terminals
+      spawn_horizontal = "<A-h>",
+      spawn_vertical = "<A-v>",
+      spawn_window = "<leader>w",
    },
 }
 
@@ -176,14 +231,6 @@ M.mappings.plugins = {
    },
    comment = {
       toggle = "<leader>/",
-   },
-
-   dashboard = {
-      bookmarks = "<leader>bm",
-      new_file = "<leader>fn", -- basically create a new buffer
-      open = "<leader>db", -- open dashboard
-      session_load = "<leader>l",
-      session_save = "<leader>s",
    },
 
    -- map to <ESC> with no lag
@@ -201,7 +248,7 @@ M.mappings.plugins = {
       remove_workspace_folder = "<leader>wr",
       list_workspace_folders = "<leader>wl",
       type_definition = "<leader>D",
-      rename = "<leader>rn",
+      rename = "<leader>ra",
       code_action = "<leader>ca",
       references = "gr",
       float_diagnostics = "ge",

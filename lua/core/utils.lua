@@ -141,12 +141,16 @@ end
 M.load_config = function()
    local conf = require "core.default_config"
 
-   local chadrcExists, change = pcall(require, "custom.chadrc")
-
-   -- if chadrc exists , then merge its table into the default config's
-
-   if chadrcExists then
-      conf = vim.tbl_deep_extend("force", conf, change)
+   -- attempt to load and merge a user config
+   local chadrc_exists = vim.fn.filereadable(vim.fn.stdpath "config" .. "/lua/custom/chadrc.lua") == 1
+   if chadrc_exists then
+      -- merge user config if it exists and is a table; otherwise display an error
+      local user_config = require "custom.chadrc"
+      if type(user_config) == 'table' then
+         conf = vim.tbl_deep_extend("force", conf, user_config)
+      else
+         error("User config (chadrc.lua) *must* return a table!")
+      end
    end
 
    return conf
@@ -278,6 +282,40 @@ end
 M.tbl_override_req = function(name, default_table)
    local override = require("core.utils").load_config().plugins.default_plugin_config_replace[name] or {}
    return vim.tbl_deep_extend("force", default_table, override)
+end
+
+--provide labels to plugins instead of integers
+M.label_plugins = function(plugins)
+   local plugins_labeled = {}
+   for _, plugin in ipairs(plugins) do
+      plugins_labeled[plugin[1]] = plugin
+   end
+   return plugins_labeled
+end
+
+-- remove plugins specified by user from the plugins table
+M.remove_default_plugins = function(plugins)
+   local removals = require("core.utils").load_config().plugins.default_plugin_remove or {}
+   if not vim.tbl_isempty(removals) then
+      for _, plugin in pairs(removals) do
+         plugins[plugin] = nil
+      end
+   end
+   return plugins
+end
+
+-- append user plugins to default plugins
+M.add_user_plugins = function(plugins)
+   local user_Plugins = require("core.utils").load_config().plugins.install or {}
+   if type(user_Plugins) == "string"
+      then user_Plugins=require(user_Plugins)
+   end
+   if not vim.tbl_isempty(user_Plugins) then
+      for _, v in pairs(user_Plugins) do
+         plugins[v[1]] = v
+      end
+   end
+   return plugins
 end
 
 return M

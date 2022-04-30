@@ -18,11 +18,15 @@ M.autopairs = function(override_flag)
    end
 end
 
-M.better_escape = function()
-   require("better_escape").setup {
-      mapping = chadrc_config.mappings.plugins.better_escape.esc_insertmode,
-      timeout = chadrc_config.plugins.options.esc_insertmode_timeout,
+M.better_escape = function(override_flag)
+   local default = {
+     mapping = chadrc_config.mappings.plugins.better_escape.esc_insertmode,
+     timeout = chadrc_config.plugins.options.esc_insertmode_timeout,
    }
+   if override_flag then
+     default = require("core.utils").tbl_override_req("better_escape", default)
+   end
+   require("better_escape").setup(default)
 end
 
 M.blankline = function(override_flag)
@@ -32,13 +36,13 @@ M.blankline = function(override_flag)
       filetype_exclude = {
          "help",
          "terminal",
-         "dashboard",
+         "alpha",
          "packer",
          "lspinfo",
          "TelescopePrompt",
          "TelescopeResults",
          "nvchad_cheatsheet",
-         'lsp-installer',
+         "lsp-installer",
          "",
       },
       buftype_exclude = { "terminal" },

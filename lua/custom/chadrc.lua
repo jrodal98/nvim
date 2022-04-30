@@ -26,21 +26,46 @@ M.options = {
    updatetime = 250,
    undofile = true, -- keep a permanent undo (across restarts)
    fillchars = { eob = " " },
+   shadafile = vim.opt.shadafile,
    -- NvChad options
    nvChad = {
       copy_cut = false, -- copy cut text ( x key ), visual and normal mode
       copy_del = false, -- copy deleted text ( dd key ), visual and normal mode
       insert_nav = true, -- navigation in insertmode
       window_nav = true,
+      terminal_numbers = false,
       -- used for updater
-      update_url = "https://github.com/NvChad/NvChad",
+      update_url = "https://github.com/jrodal98/nvim",
       update_branch = "main",
+   },
+
+   terminal = {
+      behavior = {
+         close_on_exit = true,
+      },
+      window = {
+         vsplit_ratio = 0.5,
+         split_ratio = 0.4,
+      },
+      location = {
+         horizontal = "rightbelow",
+         vertical = "rightbelow",
+         float = {
+            relative = "editor",
+            row = 0.3,
+            col = 0.25,
+            width = 0.5,
+            height = 0.4,
+            border = "single",
+         },
+      },
    },
 }
 
 -- ui configs
 M.ui = {
    hl_override = "", -- path of your file that contains highlights
+   colors = "", -- path of your file that contains colors
    italic_comments = false,
    -- theme to be used, check available themes with `<leader> + t + h`
    theme = "tokyonight",
@@ -51,13 +76,35 @@ M.ui = {
 
 -- these are plugin related options
 M.plugins = {
+
+   -- builtin nvim plugins are disabled
+   builtins = {
+      "2html_plugin",
+      "getscript",
+      "getscriptPlugin",
+      "gzip",
+      "logipat",
+      "netrw",
+      "netrwPlugin",
+      "netrwSettings",
+      "netrwFileHandlers",
+      "matchit",
+      "tar",
+      "tarPlugin",
+      "rrhelper",
+      "spellfile_plugin",
+      "vimball",
+      "vimballPlugin",
+      "zip",
+      "zipPlugin",
+   },
    -- enable and disable plugins (false for disable)
    status = {
       blankline = true, -- show code scope with symbols
       bufferline = true, -- list open buffers up the top, easy switching too
       colorizer = false, -- color RGB, HEX, CSS, NAME color codes
       comment = true, -- easily (un)comment code, language aware
-      dashboard = true, -- NeoVim 'home screen' on open
+      alpha = true, -- NeoVim 'home screen' on open
       better_escape = true, -- map to <ESC> with no lag
       feline = true, -- statusline
       gitsigns = false, -- gitsigns in statusline
@@ -86,26 +133,27 @@ M.plugins = {
       luasnip = {
          snippet_path = { "./lua/custom/snippets" },
       },
-      statusline = { -- statusline related options
-         -- these are filetypes, not pattern matched
-         -- shown filetypes will overrule hidden filetypes
+      statusline = {
+         hide_disable = false,
+         -- hide, show on specific filetypes
          hidden = {
             "help",
-            "dashboard",
             "NvimTree",
             "terminal",
+            "alpha",
          },
-         -- show short statusline on small screens
+         shown = {},
+
+         -- truncate statusline on small screens
          shortline = true,
-         -- default, round , slant , block , arrow
-         style = "default",
+         style = "default", -- default, round , slant , block , arrow
       },
       esc_insertmode_timeout = 300,
    },
    default_plugin_config_replace = {
       nvim_treesitter = plugin_conf.treesitter,
    },
-
+   default_plugin_remove = {},
    install = userPlugins,
 }
 
@@ -117,8 +165,9 @@ M.mappings = {
    misc = {
       cheatsheet = "<leader>ch",
       close_buffer = "<leader>x",
-      copy_whole_file = "<leader>a", -- copy all contents of current buffer
-      line_number_toggle = "<leader>n", -- toggle line number
+      cp_whole_file = "<C-c>", -- copy all contents of current buffer
+      lineNR_toggle = "<leader>n", -- toggle line number
+      lineNR_rel_toggle = "<leader>rn",
       update_nvchad = "<leader>uu",
       new_buffer = "<S-t>",
       new_tab = "<C-t>b",
@@ -152,7 +201,12 @@ M.mappings = {
       -- below three are for spawning terminals
       new_horizontal = "<leader>th",
       new_vertical = "<leader>tv",
-      new_window = "<leader>tt",
+      new_float = "<leader>tf",
+
+      -- spawn new terminals
+      spawn_horizontal = "<A-h>",
+      spawn_vertical = "<A-v>",
+      spawn_window = "<leader>tt",
    },
 }
 
@@ -166,14 +220,6 @@ M.mappings.plugins = {
    -- easily (un)comment code, language aware
    comment = {
       toggle = "gc", -- toggle comment (works on multiple lines)
-   },
-   -- NeoVim 'home screen' on open
-   dashboard = {
-      bookmarks = "<leader>bm",
-      new_file = "<leader>fn", -- basically create a new buffer
-      open = "<leader>db", -- open dashboard
-      session_load = "<leader>sl", -- load a saved session
-      session_save = "<leader>ss", -- save a session
    },
    -- map to <ESC> with no lag
    better_escape = { -- <ESC> will still work
