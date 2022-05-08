@@ -32,7 +32,7 @@ local plugins = {
    },
 
    {
-      "NvChad/nvim-base16.lua",
+      "NvChad/base46",
       -- the nvchad developers have created an implicit dependency
       -- between this extension and their base nvchad config,
       -- which causes issues if you are updating plugins but
@@ -40,6 +40,10 @@ local plugins = {
       -- as the developers have a tendency to release breaking
       -- changes and I don't have time to restructure my config...
       commit="dbd746da1b1ab43faf8aad2ba5ad0be3d43eba86",
+      -- The nvchad developers renamed nvim-base16.lua repo -> base46
+      -- Since my version of nvchad uses the nvim-base16.lua name, let's
+      -- use this "as" transformation.
+      as="nvim-base16.lua",
       after = "packer.nvim",
       config = function()
          require("colors").init()
