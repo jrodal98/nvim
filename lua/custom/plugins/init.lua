@@ -86,18 +86,26 @@ return {
    -- copy vim statusline into tmux statusline
    {
       "vimpostor/vim-tpipeline",
-      -- disable if tmux is not installed
-      disable=not vim.fn.executable("tmux"),
-      config = function()
-         vim.cmd [[
+      -- disable if tmux is not running
+      cond = function()
+         -- there has to be a less stupid way to do this,
+         -- but calling if vim.fn.system... wasn't working
+         -- no matter what I tried - I think it didn't capture output
+         return vim.api.nvim_exec(
+            [[
           if system('pgrep tmux')
             " prevent statusline duplication when tmux is running
             autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=0
+            echo v:true
           else
             " set global statusline otherwise
             autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=3
+            echo v:false
           endif
-        ]]
+         ]],
+            -- capture the output
+            true
+         )
       end,
    },
    {
