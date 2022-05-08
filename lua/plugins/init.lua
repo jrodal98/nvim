@@ -19,6 +19,13 @@ local plugins = {
 
    {
       "NvChad/extensions",
+      -- the nvchad developers have created an implicit dependency
+      -- between this extension and their base nvchad config,
+      -- which causes issues if you are updating plugins but
+      -- not nvchad. I would prefer to avoid updating nvchad,
+      -- as the developers have a tendency to release breaking
+      -- changes and I don't have time to restructure my config...
+      commit="f5ed0a343b77582e093846c9e5175fb1f6266edb",
       config = function ()
          vim.schedule_wrap(require("nvchad.terminal").init())
       end
@@ -26,6 +33,13 @@ local plugins = {
 
    {
       "NvChad/nvim-base16.lua",
+      -- the nvchad developers have created an implicit dependency
+      -- between this extension and their base nvchad config,
+      -- which causes issues if you are updating plugins but
+      -- not nvchad. I would prefer to avoid updating nvchad,
+      -- as the developers have a tendency to release breaking
+      -- changes and I don't have time to restructure my config...
+      commit="dbd746da1b1ab43faf8aad2ba5ad0be3d43eba86",
       after = "packer.nvim",
       config = function()
          require("colors").init()

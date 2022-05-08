@@ -66,12 +66,12 @@ M.options = {
 M.ui = {
    hl_override = "", -- path of your file that contains highlights
    colors = "", -- path of your file that contains colors
-   italic_comments = false,
+   italic_comments = true,
    -- theme to be used, check available themes with `<leader> + t + h`
    theme = "tokyonight",
    -- Enable this only if your terminal has the colorscheme set which nvchad uses
    -- For Ex : if you have onedark set in nvchad, set onedark's bg color on your terminal
-   transparency = false,
+   transparency = true,
 }
 
 -- these are plugin related options
