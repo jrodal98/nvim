@@ -93,6 +93,9 @@ return {
           if system('pgrep tmux')
             " prevent statusline duplication when tmux is running
             autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=0
+          else
+            " set global statusline otherwise
+            autocmd BufRead,BufNewFile,BufEnter,BufWinEnter * set laststatus=3
           endif
         ]]
       end,
