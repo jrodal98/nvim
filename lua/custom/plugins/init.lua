@@ -86,6 +86,8 @@ return {
    -- copy vim statusline into tmux statusline
    {
       "vimpostor/vim-tpipeline",
+      -- disable if tmux is not installed
+      disable=not vim.fn.executable("tmux"),
       config = function()
          vim.cmd [[
           if system('pgrep tmux')
