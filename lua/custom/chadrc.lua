@@ -12,7 +12,7 @@ M.options = {
    ignorecase = true,
    smartcase = true,
    mapleader = " ",
-   mouse = "a",
+   mouse = "c",
    number = true,
    -- relative numbers in normal mode tool at the bottom of options.lua
    numberwidth = 2,
