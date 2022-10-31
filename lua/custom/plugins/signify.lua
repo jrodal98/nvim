@@ -1,7 +1,5 @@
 local map = require("core.utils").map
 
-
-
 -- default mappings
 
 -- ]c   Jump to the next hunk.

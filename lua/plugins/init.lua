@@ -25,10 +25,10 @@ local plugins = {
       -- not nvchad. I would prefer to avoid updating nvchad,
       -- as the developers have a tendency to release breaking
       -- changes and I don't have time to restructure my config...
-      commit="f5ed0a343b77582e093846c9e5175fb1f6266edb",
-      config = function ()
+      commit = "f5ed0a343b77582e093846c9e5175fb1f6266edb",
+      config = function()
          vim.schedule_wrap(require("nvchad.terminal").init())
-      end
+      end,
    },
 
    {
@@ -39,11 +39,11 @@ local plugins = {
       -- not nvchad. I would prefer to avoid updating nvchad,
       -- as the developers have a tendency to release breaking
       -- changes and I don't have time to restructure my config...
-      commit="dbd746da1b1ab43faf8aad2ba5ad0be3d43eba86",
+      commit = "dbd746da1b1ab43faf8aad2ba5ad0be3d43eba86",
       -- The nvchad developers renamed nvim-base16.lua repo -> base46
       -- Since my version of nvchad uses the nvim-base16.lua name, let's
       -- use this "as" transformation.
-      as="nvim-base16.lua",
+      as = "nvim-base16.lua",
       after = "packer.nvim",
       config = function()
          require("colors").init()

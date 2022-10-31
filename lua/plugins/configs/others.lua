@@ -20,11 +20,11 @@ end
 
 M.better_escape = function(override_flag)
    local default = {
-     mapping = chadrc_config.mappings.plugins.better_escape.esc_insertmode,
-     timeout = chadrc_config.plugins.options.esc_insertmode_timeout,
+      mapping = chadrc_config.mappings.plugins.better_escape.esc_insertmode,
+      timeout = chadrc_config.plugins.options.esc_insertmode_timeout,
    }
    if override_flag then
-     default = require("core.utils").tbl_override_req("better_escape", default)
+      default = require("core.utils").tbl_override_req("better_escape", default)
    end
    require("better_escape").setup(default)
 end

@@ -112,11 +112,7 @@ M.misc = function()
             .. tostring(terminal_options.window.vsplit_width)
             .. ")<CR>"
       )
-      map(
-         { "n", "t" },
-         term_maps.new_float,
-         "<CMD>lua require('nvchad.terminal').new_or_toggle('float')<CR>"
-      )
+      map({ "n", "t" }, term_maps.new_float, "<CMD>lua require('nvchad.terminal').new_or_toggle('float')<CR>")
 
       -- spawns terminals
       map(

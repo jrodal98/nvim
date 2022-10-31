@@ -146,10 +146,10 @@ M.load_config = function()
    if chadrc_exists then
       -- merge user config if it exists and is a table; otherwise display an error
       local user_config = require "custom.chadrc"
-      if type(user_config) == 'table' then
+      if type(user_config) == "table" then
          conf = vim.tbl_deep_extend("force", conf, user_config)
       else
-         error("User config (chadrc.lua) *must* return a table!")
+         error "User config (chadrc.lua) *must* return a table!"
       end
    end
 
@@ -307,8 +307,8 @@ end
 -- append user plugins to default plugins
 M.add_user_plugins = function(plugins)
    local user_Plugins = require("core.utils").load_config().plugins.install or {}
-   if type(user_Plugins) == "string"
-      then user_Plugins=require(user_Plugins)
+   if type(user_Plugins) == "string" then
+      user_Plugins = require(user_Plugins)
    end
    if not vim.tbl_isempty(user_Plugins) then
       for _, v in pairs(user_Plugins) do
