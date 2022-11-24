@@ -116,4 +116,19 @@ return {
          require "custom.plugins.nvim-treesitter-textobjects"
       end,
    },
+   -- A pretty list for showing diagnostics, references, telescope results, quickfix and location lists to help you solve all the trouble your code is causing.
+   {
+      "folke/trouble.nvim",
+      requires = "kyazdani42/nvim-web-devicons",
+      after = "nvim-lspconfig",
+      config = function()
+         require("trouble").setup {}
+      end,
+   },
+   {
+      "rcarriga/nvim-notify",
+      config = function()
+         vim.notify = require "notify"
+      end,
+   },
 }
