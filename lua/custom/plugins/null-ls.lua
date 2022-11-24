@@ -36,6 +36,7 @@ M.setup = function()
    null_ls.setup {
       debug = true,
       sources = sources,
+      on_attach = require "custom.async_formatting",
    }
 end
 

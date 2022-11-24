@@ -12,6 +12,7 @@ function M.on_attach(client, bufnr)
    buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
 
    require("core.mappings").lspconfig()
+   require "custom.async_formatting"(client, bufnr)
 end
 
 local capabilities = vim.lsp.protocol.make_client_capabilities()
