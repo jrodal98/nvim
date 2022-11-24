@@ -178,7 +178,7 @@ M.lspconfig = function()
    map("n", m.goto_prev, "<cmd>lua vim.diagnostic.goto_prev()<CR>")
    map("n", m.goto_next, "<cmd>lua vim.diagnostic.goto_next()<CR>")
    map("n", m.set_loclist, "<cmd>lua vim.diagnostic.setloclist()<CR>")
-   map("n", m.formatting, "<cmd>lua vim.lsp.buf.format()<CR>")
+   map("n", m.formatting, "<cmd>lua vim.lsp.buf.format{async=true}<CR>")
 end
 
 M.nvimtree = function()
