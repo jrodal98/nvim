@@ -116,4 +116,12 @@ return {
          require "custom.plugins.nvim-treesitter-textobjects"
       end,
    },
+   {
+      -- swap arguments
+      "simrat39/rust-tools.nvim",
+      after = "nvim-lspconfig",
+      config = function()
+         require "rust-tools".setup()
+      end,
+   },
 }
