@@ -2,6 +2,11 @@ local M = {}
 
 M.setup_lsp = function(attach, capabilities)
    local lspconfig = require "lspconfig"
+   -- add my formatting to the provided attach method
+   local on_attach = function(client, bufnr)
+      attach(client, bufnr)
+      require("custom.async_formatting").on_attach(client, bufnr)
+   end
 
    -- lspservers with default config
 
@@ -9,7 +14,7 @@ M.setup_lsp = function(attach, capabilities)
 
    for _, lsp in ipairs(servers) do
       lspconfig[lsp].setup {
-         on_attach = attach,
+         on_attach = on_attach,
          capabilities = capabilities,
          -- root_dir = vim.loop.cwd,
          flags = {
@@ -20,7 +25,7 @@ M.setup_lsp = function(attach, capabilities)
 
    -- lua lsp, based on https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#sumneko_lua
    lspconfig["sumneko_lua"].setup {
-      on_attach = attach,
+      on_attach = on_attach,
       capabilities = capabilities,
       -- root_dir = vim.loop.cwd,
       flags = {

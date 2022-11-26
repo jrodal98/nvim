@@ -1,7 +1,7 @@
 local map = require("core.utils").map
 
 -- formatting
-map("n", "<leader>fm", "<cmd>lua vim.lsp.buf.format{async=true}<CR>")
+map("n", "<leader>fm", "<cmd>lua require 'custom.async_formatting'.async_format()<CR>")
 -- additional code action binding (on my corne keyboard, this is lower-c)
 map("n", "<F3>", "<cmd>lua vim.lsp.buf.code_action()<CR>")
 
