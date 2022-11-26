@@ -11,9 +11,13 @@ local sources = {
    -- cargo install stylua
    b.formatting.stylua,
 
-   -- python
+   -- python code formatting
    -- pip install --user black
    b.formatting.black,
+
+   -- python import sorting
+   -- pip install --user usort
+   b.formatting.usort,
 
    -- Shell
    -- sudo pacman -Syu shfmt
