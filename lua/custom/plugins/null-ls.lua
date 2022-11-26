@@ -28,6 +28,9 @@ local sources = {
    -- sudo pacman -Syu shellcheck
    -- brew install shellcheck
    b.diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },
+   -- adding this causes an "exit 1" error notification on start-up
+   -- when opening shell scripts, but it doesn't seem to have an effect.
+   b.code_actions.shellcheck,
 
    -- Offers prose suggestions on markdown and tex
    -- pip install --user proselint
