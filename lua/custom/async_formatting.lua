@@ -1,12 +1,11 @@
--- this file is adapted from https://github.com/jose-elias-alvarez/null-ls.nvim/wiki/Formatting-on-save#code-1
---
 local M = {}
 
 -- these are formatters that should be skipped in favor of null-ls
-local formatters_to_skip = {}
+local formatters_to_skip = {
+   sumneko_lua = true,
+}
 
-formatters_to_skip["sumneko_lua"] = true
-
+-- adapted from https://github.com/jose-elias-alvarez/null-ls.nvim/wiki/Formatting-on-save#code-1
 M.async_format = function(bufnr)
    bufnr = bufnr or vim.api.nvim_get_current_buf()
 
