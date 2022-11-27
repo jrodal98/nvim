@@ -5,14 +5,15 @@
 If you already have a neovim config, make a backup:
 
 ```
-mv ~/.config/nvim ~/.config/NVIM.BAK
-# you may also need to remove this dir if you are experiencing issues
-rm -rf ~/.local/share/nvim
+mv ~/.config/nvim ~/.config/nvim.bak
+cp -r ~/.local/share/nvim/ ~/.local/share/nvim.bak
 ```
 
-Then run this commands to clone the repository:
+Run this command to clone the repository:
 
 ```
+mkdir -p ~/.config/nvim && rm -r ~/.config/nvim
+mkdir -p ~/.local/share/nvim && rm -r ~/.local/share/nvim
 git clone https://github.com/jrodal98/nvim ~/.config/nvim
 ```
 
