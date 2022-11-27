@@ -95,6 +95,7 @@ return packer.startup(function(use)
    }
    use {
       "lvimuser/lsp-inlayhints.nvim",
+      commit = "439b4811276a149e3fccb226cc9a43ff2fb0e33b",
       config = function()
          require "user.lsp.inlayhints"
       end,
@@ -203,6 +204,7 @@ return packer.startup(function(use)
 
    use {
       "folke/trouble.nvim",
+      commit = "897542f90050c3230856bc6e45de58b94c700bbf",
       requires = "kyazdani42/nvim-web-devicons",
       after = "nvim-lspconfig",
       config = function()
@@ -211,6 +213,7 @@ return packer.startup(function(use)
    }
    use {
       "rcarriga/nvim-notify",
+      commit = "e7cffd0e8c3beaa0df7d06567620afa964bc2963",
       config = function()
          require("notify").setup {
             background_colour = "#000000",
