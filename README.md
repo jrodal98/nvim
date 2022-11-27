@@ -15,6 +15,16 @@ Run this command to clone the repository:
 git clone https://github.com/jrodal98/nvim ~/.config/nvim
 ```
 
+Next, follow these steps to finish setting up the config:
+
+1. Run `nvim`, which will trigger the initial packersync (you may see errors - this is okay)
+2. Close nvim and then run `nvim` again
+3. Install null-ls related packages: `MasonInstall prettierd stylua black isort shfmt shellcheck proselint`
+4. Wait for all the treesitter and mason LSP configs to download
+5. Close nvim
+
+Setup is now complete!
+
 ## Docker
 
 ### Run instructions
