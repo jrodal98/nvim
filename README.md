@@ -19,6 +19,26 @@ git clone https://github.com/jrodal98/nvim ~/.config/nvim
 
 ## Docker
 
+### Run instructions
+
+Install:
+
+```
+docker pull ghcr.io/jrodal98/nvim:latest
+```
+
+To run the docker image and to mount the current directory into the spawned container, run:
+
+```
+docker run -v $(pwd):/project -it --rm ghcr.io/jrodal98/nvim:latest
+```
+
+You can put the following alias in your shell rc:
+
+```
+nvim_docker='docker run -v $(pwd):/project -it --rm ghcr.io/jrodal98/nvim:latest'
+```
+
 ### Build instructions
 
 First, build a base image
@@ -44,8 +64,8 @@ To upload it to ghcr without a github action...
 
 1. `docker login ghcr.io`
 2. enter github username and access token
-4. `docker tag ghcr.io/jrodal98/nvim:<version> ghcr.io/jrodal98/nvim:latest`
-5. `docker push ghcr.io/jrodal98/nvim:latest`
+3. `docker tag ghcr.io/jrodal98/nvim:<version> ghcr.io/jrodal98/nvim:latest`
+4. `docker push ghcr.io/jrodal98/nvim:latest`
 
 ## Inspiration
 
