@@ -1,5 +1,7 @@
 # Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.8.0-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
 
+![nvim-basic](https://user-images.githubusercontent.com/35352333/204128366-b720dcff-75a1-4a72-a5ed-ee413368d816.png)
+
 ## Install
 
 If you already have a neovim config, make a backup:
@@ -76,6 +78,12 @@ To upload it to ghcr without a github action...
 3. `docker tag ghcr.io/jrodal98/nvim:<version> ghcr.io/jrodal98/nvim:latest`
 4. `docker push ghcr.io/jrodal98/nvim:<version>`
 5. `docker push ghcr.io/jrodal98/nvim:latest`
+
+## Showcase
+
+![nvim-basic](https://user-images.githubusercontent.com/35352333/204128366-b720dcff-75a1-4a72-a5ed-ee413368d816.png)
+![inlay-hints](https://user-images.githubusercontent.com/35352333/204128188-62e885a4-8e2a-4aba-813c-5493df497b1a.png)
+![diagnostics](https://user-images.githubusercontent.com/35352333/204128167-9044a529-1392-412d-96d2-e1c721e479c5.png)
 
 ## Inspiration
 
