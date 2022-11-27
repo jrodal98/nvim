@@ -10,6 +10,7 @@ local diagnostics = null_ls.builtins.diagnostics
 -- https://github.com/jose-elias-alvarez/null-ls.nvim/tree/main/lua/null-ls/builtins/code_actions
 local code_actions = null_ls.builtins.code_actions
 
+-- MasonInstall prettierd stylua black isort shfmt shellcheck proselint
 null_ls.setup {
    debug = false,
    sources = {
@@ -17,7 +18,7 @@ null_ls.setup {
       formatting.prettierd,
       formatting.stylua,
       formatting.black,
-      formatting.usort,
+      formatting.isort,
       formatting.shfmt.with { extra_args = { "-i", "2", "-ci", "-bn" } },
       -- diagnostics
       diagnostics.shellcheck.with { diagnostics_format = "#{m} [#{c}]" },

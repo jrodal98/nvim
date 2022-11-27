@@ -57,15 +57,17 @@ Finally, we must manually complete the build, due to issues with running packer 
 
 1. Run `nvim`, which will trigger the initial packersync (you may see errors - this is okay)
 2. Close nvim and then run `nvim` again
-3. Wait for all the treesitter and mason LSP configs to download
-4. Outside of the container, open another terminal and run this to save the image: `docker container commit --change='ENTRYPOINT ["/usr/bin/nvim"]' nvim_docker_base ghcr.io/jrodal98/nvim:<version>`
+3. Install null-ls related packages: `MasonInstall prettierd stylua black isort shfmt shellcheck proselint`
+4. Wait for all the treesitter and mason LSP configs to download
+5. Outside of the container, open another terminal and run this to save the image: `docker container commit --change='ENTRYPOINT ["/usr/bin/nvim"]' nvim_docker_base ghcr.io/jrodal98/nvim:<version>`
 
 To upload it to ghcr without a github action...
 
 1. `docker login ghcr.io`
 2. enter github username and access token
 3. `docker tag ghcr.io/jrodal98/nvim:<version> ghcr.io/jrodal98/nvim:latest`
-4. `docker push ghcr.io/jrodal98/nvim:latest`
+4. `docker push ghcr.io/jrodal98/nvim:<version>`
+5. `docker push ghcr.io/jrodal98/nvim:latest`
 
 ## Inspiration
 
