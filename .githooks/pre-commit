@@ -12,6 +12,8 @@ if [[ "$BRANCH" != "master" ]]; then
 fi
 
 files=(
+  "Dockerfile"
+  ".dockerignore"
   ".githooks"
   ".gitignore"
   "init.lua"
