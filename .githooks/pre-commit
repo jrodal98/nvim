@@ -4,3 +4,30 @@ stylua init.lua lua
 git add init.lua lua
 
 echo "formatted lua files"
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "$BRANCH" != "master" ]]; then
+  echo 'Skipping file copy'
+  exit 0
+fi
+
+files=(
+  "Dockerfile"
+  ".dockerignore"
+  ".githooks"
+  ".gitignore"
+  "init.lua"
+  "lua"
+  "plugin"
+  "README.md"
+  "snippets"
+  ".stylua.toml"
+)
+
+mkdir -p "../nvim-public"
+for file in "${files[@]}"; do
+  rm -r "../nvim-public/$file"
+  cp -r "$file" "../nvim-public/$file"
+done
+
+echo "copied files to nvim-public"
