@@ -24,10 +24,13 @@ files=(
   ".stylua.toml"
 )
 
-mkdir -p "../nvim-public"
+public_dir="../nvim-public"
+
+git -C "$public_dir" pull || git clone git@github.com:jrodal98/nvim.git "$public_dir"
 for file in "${files[@]}"; do
-  rm -r "../nvim-public/$file"
-  cp -r "$file" "../nvim-public/$file"
+  rm -r "${public_dir:?}/${file}"
+  cp -r "$file" "${public_dir:?}/${file}"
 done
 
 echo "copied files to nvim-public"
+
