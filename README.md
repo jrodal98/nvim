@@ -1,7 +1,5 @@
 # Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.8.0-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim) [![NVIM Docker Image CI](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml/badge.svg)](https://github.com/jrodal98/nvim/actions/workflows/nvim-docker-image.yml)
 
-My neovim configuration, based on [NvChad](https://github.com/NvChad/NvChad). Requires nvim >= v0.8
-
 ## Install
 
 If you already have a neovim config, make a backup:
@@ -47,3 +45,8 @@ You can put the following alias in your shell rc:
 nvim_docker='docker run -v $(pwd):/project -it --rm ghcr.io/jrodal98/nvim:latest'
 ```
 
+## Inspiration
+
+- [nvim-basic-ide](https://github.com/LunarVim/nvim-basic-ide)
+- [Neovim-from-scratch](https://github.com/LunarVim/Neovim-from-scratch)
+- [NvChad](https://github.com/NvChad/NvChad)
