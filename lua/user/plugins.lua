@@ -234,8 +234,6 @@ return packer.startup(function(use)
       end,
    }
 
-   -- run snippets of code
-   use { "michaelb/sniprun", commit = "c37086a0d12b2053bf147c2f4643c0c92318c0c2", run = "bash ./install.sh" }
    -- Automatically set up your configuration after cloning packer.nvim
    -- Put this at the end after all plugins
    if PACKER_BOOTSTRAP then
