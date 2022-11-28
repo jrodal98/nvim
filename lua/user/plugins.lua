@@ -232,7 +232,11 @@ return packer.startup(function(use)
       "j-hui/fidget.nvim",
       commit = "44585a0c0085765195e6961c15529ba6c5a2a13b",
       config = function()
-         require("fidget").setup {}
+         require("fidget").setup {
+            window = {
+               blend = 0, -- make it transparent
+            },
+         }
       end,
    }
 
