@@ -127,7 +127,6 @@ return packer.startup(function(use)
    use {
       "lewis6991/gitsigns.nvim",
       commit = "f98c85e7c3d65a51f45863a34feb4849c82f240f",
-      cond = not require("user.utils").is_devserver(),
       config = function()
          require "user.gitsigns"
       end,
@@ -136,7 +135,10 @@ return packer.startup(function(use)
    use {
       "mhinz/vim-signify",
       commit = "8bc268c79d4053c2f5ccaadcf0b666dd16ed3a58",
-      cond = require("user.utils").is_devserver(),
+      config = function()
+         vim.cmd [[ let g:signify_skip = { 'vcs': { 'allow': ['hg'] } }
+      ]]
+      end,
    }
 
    -- DAP
