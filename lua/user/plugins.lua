@@ -148,8 +148,11 @@ return packer.startup(function(use)
    use { "svermeulen/vim-cutlass", commit = "7afd649415541634c8ce317fafbc31cd19d57589" }
    -- surround words and such
    use {
-      "tpope/vim-surround",
-      commit = "3d188ed2113431cf8dac77be61b842acb64433d9",
+      "kylechui/nvim-surround",
+      commit = "6b45fbffdabb2d8cd80d310006c92e59cec8fd74",
+      config = function()
+         require("nvim-surround").setup {}
+      end,
    }
    -- motion plugin (move with s)
    use {
@@ -222,6 +225,17 @@ return packer.startup(function(use)
       end,
    }
 
+   -- UI for LSP progress
+   use {
+      "j-hui/fidget.nvim",
+      commit = "44585a0c0085765195e6961c15529ba6c5a2a13b",
+      config = function()
+         require("fidget").setup {}
+      end,
+   }
+
+   -- run snippets of code
+   use { "michaelb/sniprun", commit = "c37086a0d12b2053bf147c2f4643c0c92318c0c2", run = "bash ./install.sh" }
    -- Automatically set up your configuration after cloning packer.nvim
    -- Put this at the end after all plugins
    if PACKER_BOOTSTRAP then
