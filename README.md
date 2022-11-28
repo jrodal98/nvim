@@ -1,6 +1,6 @@
 # Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.8.0-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
 
-![nvim-basic](https://user-images.githubusercontent.com/35352333/204128366-b720dcff-75a1-4a72-a5ed-ee413368d816.png)
+![nvim-basic](https://user-images.githubusercontent.com/35352333/204195025-4e037788-d400-4e88-b73d-97d6b49225c8.png)
 
 ## Install
 
@@ -81,9 +81,9 @@ To upload it to ghcr without a github action...
 
 ## Showcase
 
-![nvim-basic](https://user-images.githubusercontent.com/35352333/204128366-b720dcff-75a1-4a72-a5ed-ee413368d816.png)
-![inlay-hints](https://user-images.githubusercontent.com/35352333/204128188-62e885a4-8e2a-4aba-813c-5493df497b1a.png)
-![diagnostics](https://user-images.githubusercontent.com/35352333/204128167-9044a529-1392-412d-96d2-e1c721e479c5.png)
+![nvim-basic](https://user-images.githubusercontent.com/35352333/204195025-4e037788-d400-4e88-b73d-97d6b49225c8.png)
+![nvim-inlayhints](https://user-images.githubusercontent.com/35352333/204195065-4c8d32b6-5188-4654-a36b-54220af6f0e3.png)
+![nvim-diagnostic](https://user-images.githubusercontent.com/35352333/204195098-380b2db8-aa14-4356-b72a-47a361ad3643.png)
 
 ## Inspiration
 
