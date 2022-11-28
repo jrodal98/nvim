@@ -141,6 +141,14 @@ return packer.startup(function(use)
       end,
    }
 
+   use {
+      "akinsho/git-conflict.nvim",
+      commit = "0f87781ad92957a5354197baed9a6ace56332aa7",
+      config = function()
+         require("git-conflict").setup()
+      end,
+   }
+
    -- DAP
    use { "mfussenegger/nvim-dap", commit = "6b12294a57001d994022df8acbe2ef7327d30587" }
    use { "rcarriga/nvim-dap-ui", commit = "1cd4764221c91686dcf4d6b62d7a7b2d112e0b13" }
