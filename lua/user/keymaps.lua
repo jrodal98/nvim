@@ -55,6 +55,13 @@ keymap("n", "<LEADER>x", "<cmd>Bdelete!<CR>", opts)
 -- Clear highlights
 keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", opts)
 
+-- Folding
+--  Increase with zm, decrease with zr, fold all with zM, unfold all with zR
+--  Toggle fold with za, open fold with zo, close fold with zc
+--  If foldmethod is changed to manual, zf to fold (use as text object, e.g. zfaw, or in visual mode)
+-- Toggle fold
+keymap({ "n", "v" }, "<LEADER><space>", "za", opts)
+
 -- Better paste
 keymap("v", "p", '"_dP', opts)
 
