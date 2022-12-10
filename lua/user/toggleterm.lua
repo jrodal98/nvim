@@ -35,7 +35,7 @@ vim.cmd "autocmd! TermOpen term://* lua set_terminal_keymaps()"
 
 local Terminal = require("toggleterm.terminal").Terminal
 
-local python = Terminal:new { cmd = "python", hidden = true }
+local python = Terminal:new { cmd = "python3", hidden = true }
 
 function _PYTHON_TOGGLE()
    python:toggle()

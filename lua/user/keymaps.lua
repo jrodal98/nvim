@@ -65,10 +65,6 @@ keymap({ "n", "v" }, "<LEADER><space>", "za", opts)
 -- Better paste
 keymap("v", "p", '"_dP', opts)
 
--- Insert --
--- Press jk fast to enter
-keymap("i", "jk", "<ESC>", opts)
-
 -- Visual --
 -- Stay in indent mode
 keymap("v", "<", "<gv", opts)
@@ -84,7 +80,6 @@ keymap("n", "<leader>ff", ":Telescope find_files<CR>", opts)
 keymap("n", "<leader>fa", ":Telescope find_files follow=true no_ignore=true hidden=true <CR>", opts)
 keymap("n", "<leader>fo", ":Telescope oldfiles<CR>", opts)
 keymap("n", "<leader>fw", ":Telescope live_grep<CR>", opts)
-keymap("n", "<leader>fp", ":Telescope projects<CR>", opts)
 keymap("n", "<leader>fb", ":Telescope buffers<CR>", opts)
 
 -- Git
