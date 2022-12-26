@@ -52,8 +52,12 @@ keymap("n", "<S-TAB>", ":bprevious<CR>", opts)
 -- Close buffers
 keymap("n", "<LEADER>x", "<cmd>Bdelete!<CR>", opts)
 
--- Clear highlights
-keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", opts)
+-- Clear notifications, highlights, and short messages
+keymap("n", "<Esc>", function()
+   require("notify").dismiss() -- clear notifications
+   vim.cmd.nohlsearch() -- clear highlights
+   vim.cmd.echo() -- clear short-message
+end, opts)
 
 -- Folding
 --  Increase with zm, decrease with zr, fold all with zM, unfold all with zR
