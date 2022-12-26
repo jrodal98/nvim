@@ -57,6 +57,7 @@ keymap("n", "<Esc>", function()
    require("notify").dismiss() -- clear notifications
    vim.cmd.nohlsearch() -- clear highlights
    vim.cmd.echo() -- clear short-message
+   vim.cmd.helpclose() -- close vim help pages
 end, opts)
 
 -- Folding
