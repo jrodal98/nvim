@@ -47,7 +47,7 @@ keymap("n", "<left>", ":vertical resize -1<CR>", opts)
 keymap("n", "<right>", ":vertical resize +1<CR>", opts)
 
 -- json format
-keymap("v", "<LEADER>fj", ":!python -m json.tool<CR>", opts)
+keymap("v", "<LEADER>fj", ":!python3 -m json.tool<CR>", opts)
 
 -- Navigate buffers
 keymap("n", "<TAB>", ":bnext<CR>", opts)
