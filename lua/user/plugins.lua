@@ -76,10 +76,10 @@ return packer.startup(function(use)
    use { "rafamadriz/friendly-snippets", commit = "2be79d8a9b03d4175ba6b3d14b082680de1b31b1" } -- a bunch of snippets to use
 
    -- LSP
-   use { "neovim/nvim-lspconfig", commit = "f11fdff7e8b5b415e5ef1837bdcdd37ea6764dda" } -- enable LSP
-   use { "williamboman/mason.nvim", commit = "c2002d7a6b5a72ba02388548cfaf420b864fbc12" }
-   use { "williamboman/mason-lspconfig.nvim", commit = "0eb7cfefbd3a87308c1875c05c3f3abac22d367c" }
-   use { "jose-elias-alvarez/null-ls.nvim", commit = "c0c19f32b614b3921e17886c541c13a72748d450" } -- for formatters and linters
+   use { "neovim/nvim-lspconfig", commit = "5a871409199d585b52b69952532e3fb435e64566" } -- enable LSP
+   use { "williamboman/mason.nvim", commit = "9992c66c2a832a17302ca3179a82516544565f9b" }
+   use { "williamboman/mason-lspconfig.nvim", commit = "2b811031febe5f743e07305738181ff367e1e452" }
+   use { "jose-elias-alvarez/null-ls.nvim", commit = "456a983ce9843123e51b955f50925077ca7207d5" } -- for formatters and linters
    -- vscode lightbulb for code actions
    use {
       "kosayoda/nvim-lightbulb",

@@ -3,7 +3,7 @@ local servers = {
    "bashls",
    "dockerls",
    "rust_analyzer",
-   "sumneko_lua",
+   "lua_ls",
 }
 
 local settings = {

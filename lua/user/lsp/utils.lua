@@ -2,7 +2,7 @@ local M = {}
 
 -- these are formatters that should be skipped in favor of null-ls
 local formatters_to_skip = {
-   sumneko_lua = true,
+   lua_ls = true,
 }
 
 -- adapted from https://github.com/jose-elias-alvarez/null-ls.nvim/wiki/Formatting-on-save#code-1
