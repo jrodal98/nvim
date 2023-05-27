@@ -106,19 +106,19 @@ return packer.startup(function(use)
    -- Treesitter
    use {
       "nvim-treesitter/nvim-treesitter",
-      commit = "8e763332b7bf7b3a426fd8707b7f5aa85823a5ac",
+      commit = "ab3fb2a285e55a56b732d2f9f40ba7c3a10b87fc",
    }
    -- rainbow parentheses
    use {
       "p00f/nvim-ts-rainbow",
-      commit = "064fd6c0a15fae7f876c2c6dd4524ca3fad96750",
+      commit = "ef95c15a935f97c65a80e48e12fe72d49aacf9b9",
       after = "nvim-treesitter",
    }
 
    -- extra functionality, such as argument swapping and navigating functions,classes,conditionals,loops
    use {
       "nvim-treesitter/nvim-treesitter-textobjects",
-      commit = "04c61332a3cb78e56f7455d17d7878b0b7e66270",
+      commit = "95b76b95eff25e1e64f363938cd853852355d70a",
       after = "nvim-treesitter",
    }
 
