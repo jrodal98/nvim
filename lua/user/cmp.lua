@@ -109,6 +109,7 @@ cmp.setup {
       end,
    },
    sources = {
+      { name = "codeium" },
       { name = "nvim_lsp" },
       { name = "nvim_lua" },
       { name = "luasnip" },
@@ -127,3 +128,26 @@ cmp.setup {
       ghost_text = true,
    },
 }
+
+-- `/` cmdline setup.
+cmp.setup.cmdline("/", {
+   mapping = cmp.mapping.preset.cmdline(),
+   sources = {
+      { name = "buffer" },
+   },
+})
+
+-- `:` cmdline setup.
+cmp.setup.cmdline(":", {
+   mapping = cmp.mapping.preset.cmdline(),
+   sources = cmp.config.sources({
+      { name = "path" },
+   }, {
+      {
+         name = "cmdline",
+         option = {
+            ignore_cmds = { "Man", "!" },
+         },
+      },
+   }),
+})
