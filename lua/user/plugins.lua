@@ -131,9 +131,7 @@ return require("lazy").setup {
 
    {
       "akinsho/git-conflict.nvim",
-      config = function()
-         require("git-conflict").setup()
-      end,
+      opts = {},
    },
 
    -- DAP
@@ -146,9 +144,7 @@ return require("lazy").setup {
    -- surround words and such
    {
       "kylechui/nvim-surround",
-      config = function()
-         require("nvim-surround").setup {}
-      end,
+      opts = {},
    },
    -- motion plugin (move with s)
    {
@@ -199,9 +195,6 @@ return require("lazy").setup {
    {
       "folke/trouble.nvim",
       dependencies = { "kyazdani42/nvim-web-devicons" },
-      config = function()
-         require("trouble").setup {}
-      end,
    },
    {
       "rcarriga/nvim-notify",
@@ -216,8 +209,13 @@ return require("lazy").setup {
    -- UI for LSP progress
    {
       "j-hui/fidget.nvim",
-      config = function()
-         require("fidget").setup {}
-      end,
+      opts = {
+         -- this might work after I update nvim-tree
+         integration = {
+            ["nvim-tree"] = {
+               enable = false,
+            },
+         },
+      },
    },
 }
