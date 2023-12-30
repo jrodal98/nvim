@@ -4,7 +4,7 @@ if not status_ok then
 end
 
 -- get rid of block effect on inlayhint
-vim.cmd [[hi link LspInlayHint Comment]]
+vim.cmd [[highlight! link LspInlayHint Comment]]
 
 inlayhints.setup()
 vim.api.nvim_create_augroup("LspAttach_inlayhints", {})
