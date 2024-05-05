@@ -14,7 +14,12 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 local hostname = vim.fn.hostname()
-local is_meta = (hostname == "jrodal-mbp" or hostname == "jrodal-850" or hostname == "jrodal-257")
+local is_meta = (
+   hostname == "jrodal-mbp"
+   or hostname == "jrodal-850"
+   or hostname == "jrodal-257"
+   or hostname == "PW08WPZH"
+)
 
 local Event = require "lazy.core.handler.event"
 Event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
@@ -26,13 +31,13 @@ return require("lazy").setup({
    { "numToStr/Comment.nvim" },
 
    { "kyazdani42/nvim-web-devicons", lazy = true },
-   { "kyazdani42/nvim-tree.lua", commit = "7282f7de8aedf861fe0162a559fc2b214383c51c" },
-   { "akinsho/bufferline.nvim", commit = "83bf4dc7bff642e145c8b4547aa596803a8b4dc4" },
+   { "kyazdani42/nvim-tree.lua" },
+   { "akinsho/bufferline.nvim" },
    { "moll/vim-bbye", event = "LazyFile" }, -- Bbye allows you to do delete buffers (close files) without closing your windows or messing up your layout.
    { "nvim-lualine/lualine.nvim" },
    { "akinsho/toggleterm.nvim" },
    { "lewis6991/impatient.nvim", lazy = false },
-   { "lukas-reineke/indent-blankline.nvim", event = "LazyFile", commit = "db7cbcb40cc00fc5d6074d7569fb37197705e7f6" },
+   { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {}, event = "LazyFile" },
    { "goolord/alpha-nvim", event = "VimEnter" },
 
    -- Colorschemes
@@ -176,6 +181,12 @@ return require("lazy").setup({
    -- yank with osc, which allows yanking from remote machines
    {
       "ojroques/vim-oscyank",
+      config = function()
+         -- Execute OSCYankReg on any yank
+         vim.cmd [[
+        autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | execute 'OSCYankRegister "' | endif
+      ]]
+      end,
       event = "LazyFile",
    },
 
@@ -225,13 +236,5 @@ return require("lazy").setup({
    {
       "j-hui/fidget.nvim",
       event = "LazyFile",
-      opts = {
-         -- this might work after I update nvim-tree
-         integration = {
-            ["nvim-tree"] = {
-               enable = false,
-            },
-         },
-      },
    },
 }, { defaults = { lazy = true } })
