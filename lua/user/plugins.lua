@@ -21,23 +21,19 @@ local is_meta = (
    or hostname == "PW08WPZH"
 )
 
-local Event = require "lazy.core.handler.event"
-Event.mappings.LazyFile = { id = "LazyFile", event = { "BufReadPost", "BufNewFile", "BufWritePre" } }
-Event.mappings["User LazyFile"] = Event.mappings.LazyFile
-
 return require("lazy").setup({
    { "nvim-lua/plenary.nvim" }, -- Useful lua functions used by lots of plugins
-   { "windwp/nvim-autopairs", event = "LazyFile" }, -- Autopairs, integrates with both cmp and treesitter
+   { "windwp/nvim-autopairs", event = "VeryLazy" }, -- Autopairs, integrates with both cmp and treesitter
    { "numToStr/Comment.nvim" },
 
    { "kyazdani42/nvim-web-devicons", lazy = true },
    { "kyazdani42/nvim-tree.lua" },
    { "akinsho/bufferline.nvim" },
-   { "moll/vim-bbye", event = "LazyFile" }, -- Bbye allows you to do delete buffers (close files) without closing your windows or messing up your layout.
+   { "moll/vim-bbye", event = "VeryLazy" }, -- Bbye allows you to do delete buffers (close files) without closing your windows or messing up your layout.
    { "nvim-lualine/lualine.nvim" },
    { "akinsho/toggleterm.nvim" },
    { "lewis6991/impatient.nvim", lazy = false },
-   { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {}, event = "LazyFile" },
+   { "lukas-reineke/indent-blankline.nvim", main = "ibl", opts = {}, event = "VeryLazy" },
    { "goolord/alpha-nvim", event = "VimEnter" },
 
    -- Colorschemes
@@ -84,7 +80,7 @@ return require("lazy").setup({
    -- LSP
    {
       "neovim/nvim-lspconfig",
-      event = "LazyFile",
+      event = "VeryLazy",
       dependencies = {
 
          { "williamboman/mason.nvim" },
@@ -97,11 +93,11 @@ return require("lazy").setup({
          },
       },
    }, -- enable LSP
-   { "jose-elias-alvarez/null-ls.nvim", event = "LazyFile" }, -- for formatters and linters
+   { "nvimtools/none-ls.nvim", event = "VeryLazy" }, -- for formatters and linters
    -- vscode lightbulb for code actions
    {
       "kosayoda/nvim-lightbulb",
-      event = "LazyFile",
+      event = "VeryLazy",
       config = function()
          vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
             callback = function()
@@ -116,7 +112,7 @@ return require("lazy").setup({
    -- Treesitter
    {
       "nvim-treesitter/nvim-treesitter",
-      event = "LazyFile",
+      event = "VeryLazy",
       dependencies = {
          -- extra functionality, such as argument swapping and navigating functions,classes,conditionals,loops
          { "nvim-treesitter/nvim-treesitter-textobjects" },
@@ -126,7 +122,7 @@ return require("lazy").setup({
    -- version control
    {
       "lewis6991/gitsigns.nvim",
-      event = "LazyFile",
+      event = "VeryLazy",
       config = function()
          require "user.gitsigns"
       end,
@@ -134,7 +130,7 @@ return require("lazy").setup({
 
    {
       "mhinz/vim-signify",
-      event = "LazyFile",
+      event = "VeryLazy",
       config = function()
          vim.cmd [[ let g:signify_skip = { 'vcs': { 'allow': ['hg'] } }
       ]]
@@ -143,7 +139,7 @@ return require("lazy").setup({
 
    {
       "akinsho/git-conflict.nvim",
-      event = "LazyFile",
+      event = "VeryLazy",
       opts = {},
    },
 
@@ -153,12 +149,12 @@ return require("lazy").setup({
    { "ravenxrz/DAPInstall.nvim" },
 
    -- better cut-delete-copy-paste logic
-   { "svermeulen/vim-cutlass", event = "LazyFile" },
+   { "svermeulen/vim-cutlass", event = "VeryLazy" },
    -- surround words and such
    {
       "kylechui/nvim-surround",
       opts = {},
-      event = "LazyFile",
+      event = "VeryLazy",
    },
    -- motion plugin (move with s)
    {
@@ -169,25 +165,13 @@ return require("lazy").setup({
    -- better repeat logic (e.g. hit . to repeat some commands)
    {
       "tpope/vim-repeat",
-      event = "LazyFile",
+      event = "VeryLazy",
    },
 
    -- better increment/decrement logic
    {
       "monaqa/dial.nvim",
-      event = "LazyFile",
-   },
-
-   -- yank with osc, which allows yanking from remote machines
-   {
-      "ojroques/vim-oscyank",
-      config = function()
-         -- Execute OSCYankReg on any yank
-         vim.cmd [[
-        autocmd TextYankPost * if v:event.operator is 'y' && v:event.regname is '' | execute 'OSCYankRegister "' | endif
-      ]]
-      end,
-      event = "LazyFile",
+      event = "VeryLazy",
    },
 
    -- copy vim statusline into tmux statusline
@@ -219,7 +203,7 @@ return require("lazy").setup({
 
    {
       "folke/trouble.nvim",
-      event = "LazyFile",
+      event = "VeryLazy",
       dependencies = { "kyazdani42/nvim-web-devicons" },
    },
    {
@@ -235,6 +219,6 @@ return require("lazy").setup({
    -- UI for LSP progress
    {
       "j-hui/fidget.nvim",
-      event = "LazyFile",
+      event = "VeryLazy",
    },
 }, { defaults = { lazy = true } })

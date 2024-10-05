@@ -120,6 +120,3 @@ keymap("n", "x", "d", opts)
 keymap("x", "x", "d", opts)
 keymap("n", "xx", "dd", opts)
 keymap("n", "X", "D", opts)
-
--- OSCYank
-keymap("v", "<leader>y", ":OSCYankVisual <CR>", opts)

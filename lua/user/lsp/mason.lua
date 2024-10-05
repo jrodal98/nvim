@@ -4,6 +4,7 @@ local servers = {
    "dockerls",
    "rust_analyzer",
    "lua_ls",
+   "ruff_lsp",
 }
 
 local settings = {
