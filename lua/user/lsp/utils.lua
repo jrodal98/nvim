@@ -6,9 +6,9 @@ local formatters_to_skip = {
    pyright = true,
 }
 
-local organize_imports = function(client, bufnr)
-   -- only ruff is supported AFAIK
-   if client.name ~= "ruff_lsp" then
+local organize_imports = function(bufnr)
+   local clients = vim.lsp.get_clients { bufnr = bufnr, method = "textDocument/codeAction" }
+   if #clients == 0 then
       return
    end
 
@@ -35,6 +35,10 @@ end
 M.async_format = function(bufnr)
    bufnr = bufnr or vim.api.nvim_get_current_buf()
 
+   -- Technically this bit isn't async and adds a 100ms penalty to buffers with
+   -- ruff lsp attached, but the pros outweight the cons. It isn't noticable.
+   organize_imports(bufnr)
+
    vim.lsp.buf_request(bufnr, "textDocument/formatting", vim.lsp.util.make_formatting_params {}, function(err, res, ctx)
       local client = vim.lsp.get_client_by_id(ctx.client_id)
       if formatters_to_skip[client.name] then
@@ -58,10 +62,6 @@ M.async_format = function(bufnr)
          vim.notify("Formatting: using " .. client.name, vim.log.levels.DEBUG)
          vim.lsp.util.apply_text_edits(res, bufnr, client and client.offset_encoding or "utf-16")
          vim.api.nvim_buf_call(bufnr, function()
-            -- Technically this bit isn't async and adds a 100ms penalty to buffers
-            -- with ruff lsp attached, but the pros outweight the cons.
-            -- It isn't noticable.
-            organize_imports(client, bufnr)
             vim.cmd "silent noautocmd update"
          end)
       end
