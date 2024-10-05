@@ -1,8 +1,9 @@
 local M = {}
 
--- these are formatters that should be skipped in favor of null-ls
+-- these are formatters that should be skipped
 local formatters_to_skip = {
    lua_ls = true,
+   pyright = true,
 }
 
 -- adapted from https://github.com/jose-elias-alvarez/null-ls.nvim/wiki/Formatting-on-save#code-1
@@ -61,6 +62,11 @@ end
 local augroup = vim.api.nvim_create_augroup("LspFormatting", {})
 M.on_attach = function(client, bufnr)
    lsp_keymaps(bufnr)
+   if client.name == "ruff_lsp" then
+      -- Disable hover in favor of Pyright
+      client.server_capabilities.hoverProvider = false
+   end
+
    if client.supports_method "textDocument/formatting" then
       vim.api.nvim_clear_autocmds { group = augroup, buffer = bufnr }
       vim.api.nvim_create_autocmd("BufWritePost", {
