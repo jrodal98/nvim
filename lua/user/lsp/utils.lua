@@ -32,6 +32,10 @@ M.async_format = function(bufnr)
       if res then
          vim.notify("Formatting: using " .. client.name, vim.log.levels.DEBUG)
          vim.lsp.util.apply_text_edits(res, bufnr, client and client.offset_encoding or "utf-16")
+         vim.lsp.buf.code_action {
+            context = { only = { "source.organizeImports" } },
+            apply = true,
+         }
          vim.api.nvim_buf_call(bufnr, function()
             vim.cmd "silent noautocmd update"
          end)
