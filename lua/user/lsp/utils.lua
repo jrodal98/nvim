@@ -6,6 +6,31 @@ local formatters_to_skip = {
    pyright = true,
 }
 
+local organize_imports = function(client, bufnr)
+   -- only ruff is supported AFAIK
+   if client.name ~= "ruff_lsp" then
+      return
+   end
+
+   local params = vim.lsp.util.make_range_params()
+   params.context = { diagnostics = vim.lsp.diagnostic.get_line_diagnostics() }
+
+   local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params)
+   if not results then
+      return
+   end
+
+   for _, result in pairs(results) do
+      for _, action in pairs(result.result or {}) do
+         if action.kind == "source.organizeImports" then
+            vim.lsp.buf.code_action { context = { only = { "source.organizeImports" } }, apply = true }
+            vim.wait(100)
+            break
+         end
+      end
+   end
+end
+
 -- adapted from https://github.com/jose-elias-alvarez/null-ls.nvim/wiki/Formatting-on-save#code-1
 M.async_format = function(bufnr)
    bufnr = bufnr or vim.api.nvim_get_current_buf()
@@ -32,11 +57,11 @@ M.async_format = function(bufnr)
       if res then
          vim.notify("Formatting: using " .. client.name, vim.log.levels.DEBUG)
          vim.lsp.util.apply_text_edits(res, bufnr, client and client.offset_encoding or "utf-16")
-         vim.lsp.buf.code_action {
-            context = { only = { "source.organizeImports" } },
-            apply = true,
-         }
          vim.api.nvim_buf_call(bufnr, function()
+            -- Technically this bit isn't async and adds a 100ms penalty to buffers
+            -- with ruff lsp attached, but the pros outweight the cons.
+            -- It isn't noticable.
+            organize_imports(client, bufnr)
             vim.cmd "silent noautocmd update"
          end)
       end

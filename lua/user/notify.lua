@@ -12,6 +12,7 @@ local ignored_messages = {
    "warning: multiple different client offset_encodings detected for buffer, this is not supported yet",
    "No code actions available",
    "method textDocument/codeAction is not supported by any of the servers registered for the current buffer",
+   "completion request failed",
 }
 
 vim.notify = function(msg, lvl, opts)
