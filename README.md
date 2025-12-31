@@ -1,4 +1,4 @@
-# Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.10.0-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
+# Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.11.4-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
 
 Modern, modular Neovim configuration with environment-aware plugin loading and graceful degradation.
 
@@ -18,11 +18,8 @@ Modern, modular Neovim configuration with environment-aware plugin loading and g
 
 ## Requirements
 
-- Neovim >= 0.10.0
-- Git
+- Neovim >= 0.11.4
 - A [Nerd Font](https://www.nerdfonts.com/) (optional, for icons)
-- Node.js (for some LSP servers)
-- Python 3 with `pynvim` (for some plugins)
 
 ## Install
 
@@ -46,6 +43,7 @@ nvim
 ```
 
 Lazy.nvim will automatically:
+
 1. Clone itself on first run
 2. Install all plugins
 3. Set up LSP servers via Mason
@@ -77,7 +75,7 @@ lua/user/plugins/
 
 ### Environment Detection
 
-The config uses a dotgk-wrapper (see `lua/init-utils/dotgk-wrapper.lua`) to detect the environment:
+The config uses [dotgk](https://github.com/jrodal98/dotgk) via a dotgk-wrapper (see `lua/init-utils/dotgk-wrapper.lua`) to detect the environment:
 
 - If dotgk is available, it uses it for environment checks
 - Otherwise, it provides a mock with sensible defaults
@@ -96,7 +94,9 @@ lua/local_plugins/
 │   └── ...           # Additional modules
 ```
 
-The `add_spec` function automatically detects local plugins and configures them.
+The `add_spec` function automatically detects local plugins and configures them just like other lazy plugins.
+
+You don't need this unless you want to lazy load some local configs. I used to have some stuff here, but it's empty at the time of writing.
 
 ### Provider Pattern
 
@@ -150,6 +150,7 @@ For local plugins, just create the directory in `lua/local_plugins/` and a spec 
 ### LSP Configuration
 
 LSP servers are configured in `lua/user/plugins/lsp/nvim-lspconfig.lua` with:
+
 - Auto-installation via Mason
 - Environment-specific server lists (Meta vs public)
 - Custom handlers and keymaps
@@ -158,6 +159,7 @@ LSP servers are configured in `lua/user/plugins/lsp/nvim-lspconfig.lua` with:
 ### Completion
 
 Completion via nvim-cmp with:
+
 - LSP source
 - Buffer source
 - Path source
@@ -167,6 +169,7 @@ Completion via nvim-cmp with:
 ### File Navigation
 
 Multiple navigation options:
+
 - **Telescope**: Fuzzy finder for files, grep, buffers, git, and more
 - **nvim-tree**: Traditional file tree sidebar
 - **oil.nvim**: Edit directories like buffers
@@ -186,6 +189,7 @@ Multiple navigation options:
 Leader key: `<Space>`
 
 ### General
+
 - `<leader>q` - Quit buffer (Bbye)
 - `<leader>w` - Save file
 - `<C-h/j/k/l>` - Navigate windows
@@ -194,6 +198,7 @@ Leader key: `<Space>`
 - `<leader>-` - Open oil.nvim
 
 ### LSP
+
 - `gd` - Go to definition
 - `gD` - Go to declaration
 - `gr` - References
@@ -206,6 +211,7 @@ Leader key: `<Space>`
 - `[d` / `]d` - Previous/next diagnostic
 
 ### Telescope
+
 - `<leader>ff` - Find files
 - `<leader>fg` - Live grep
 - `<leader>fb` - Buffers
@@ -214,6 +220,7 @@ Leader key: `<Space>`
 - `<leader>fk` - Keymaps
 
 ### Git
+
 - `<leader>gg` - Lazygit (via toggleterm)
 - `]c` / `[c` - Next/prev hunk
 - `<leader>hs` - Stage hunk
