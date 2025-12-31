@@ -246,45 +246,6 @@ Edit `lua/user/plugins/lsp/nvim-lspconfig.lua` to add/remove LSP servers in the 
 
 Edit `lua/user/plugins/lsp/none-ls.lua` to configure null-ls sources.
 
-## Docker
-
-### Run
-
-```bash
-docker pull ghcr.io/jrodal98/nvim:latest
-docker run -v $(pwd):/project -it --rm ghcr.io/jrodal98/nvim:latest
-```
-
-Alias:
-```bash
-alias nvim_docker='docker run -v $(pwd):/project -it --rm ghcr.io/jrodal98/nvim:latest'
-```
-
-### Build
-
-```bash
-docker build . -t ghcr.io/jrodal98/nvim:<version>
-docker run -it --rm --name nvim_docker_base ghcr.io/jrodal98/nvim:<version>
-```
-
-Inside container:
-1. Run `nvim` and let lazy.nvim install plugins
-2. `:Mason` to install LSP servers/tools
-3. Close nvim
-
-Outside container:
-```bash
-docker container commit --change='ENTRYPOINT ["/usr/bin/nvim"]' nvim_docker_base ghcr.io/jrodal98/nvim:<version>
-```
-
-Push:
-```bash
-docker login ghcr.io
-docker tag ghcr.io/jrodal98/nvim:<version> ghcr.io/jrodal98/nvim:latest
-docker push ghcr.io/jrodal98/nvim:<version>
-docker push ghcr.io/jrodal98/nvim:latest
-```
-
 ## Showcase
 
 ![nvim-basic](https://user-images.githubusercontent.com/35352333/204195025-4e037788-d400-4e88-b73d-97d6b49225c8.png)
