@@ -1,36 +1,6 @@
 #!/bin/bash
 
-stylua init.lua lua
-git add init.lua lua
+stylua init.lua lua data ftdetect
+git add init.lua lua data ftdetect
 
 echo "formatted lua files"
-
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "$BRANCH" != "master" ]]; then
-  echo 'Skipping file copy'
-  exit 0
-fi
-
-files=(
-  "Dockerfile"
-  ".dockerignore"
-  ".githooks"
-  ".gitignore"
-  "init.lua"
-  "lua"
-  "plugin"
-  "README.md"
-  "snippets"
-  ".stylua.toml"
-)
-
-public_dir="../nvim-public"
-
-git -C "$public_dir" pull || git clone git@github.com:jrodal98/nvim.git "$public_dir"
-for file in "${files[@]}"; do
-  rm -r "${public_dir:?}/${file}"
-  cp -r "$file" "${public_dir:?}/${file}"
-done
-
-echo "copied files to nvim-public"
-

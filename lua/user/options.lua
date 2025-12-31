@@ -1,47 +1,71 @@
-vim.opt.backup = false -- creates a backup file
-vim.opt.clipboard = "unnamedplus" -- allows neovim to access the system clipboard
-vim.opt.cmdheight = 1 -- more space in the neovim command line for displaying messages
-vim.opt.completeopt = { "menuone", "noselect" } -- mostly just for cmp
-vim.opt.conceallevel = 0 -- so that `` is visible in markdown files
-vim.opt.fileencoding = "utf-8" -- the encoding written to a file
-vim.opt.hlsearch = true -- highlight all matches on previous search pattern
-vim.opt.ignorecase = true -- ignore case in search patterns
-vim.opt.mouse = "c" -- allow the mouse to be used in command line mode
-vim.opt.pumheight = 10 -- pop up menu height
-vim.opt.showmode = false -- we don't need to see things like -- INSERT -- anymore
-vim.opt.showtabline = 0 -- always show tabs
-vim.opt.smartcase = true -- smart case
-vim.opt.smartindent = true -- make indenting smarter again
-vim.opt.splitbelow = true -- force all horizontal splits to go below current window
-vim.opt.splitright = true -- force all vertical splits to go to the right of current window
-vim.opt.swapfile = false -- creates a swapfile
-vim.opt.termguicolors = true -- set term gui colors (most terminals support this)
-vim.opt.timeoutlen = 1000 -- time to wait for a mapped sequence to complete (in milliseconds)
-vim.opt.undofile = true -- enable persistent undo
-vim.opt.updatetime = 300 -- faster completion (4000ms default)
-vim.opt.writebackup = false -- if a file is being edited by another program (or was written to file while editing with another program), it is not allowed to be edited
-vim.opt.expandtab = true -- convert tabs to spaces
-vim.opt.shiftwidth = 2 -- the number of spaces inserted for each indentation
-vim.opt.tabstop = 2 -- insert 2 spaces for a tab
-vim.opt.cursorline = true -- highlight the current line
-vim.opt.number = true -- set numbered lines
-vim.opt.relativenumber = true -- set numbered lines
-vim.opt.laststatus = 3 -- only the last window will always have a status line
-vim.opt.showcmd = false -- hide (partial) command in the last line of the screen (for performance)
-vim.opt.ruler = false -- hide the line and column number of the cursor position
-vim.opt.numberwidth = 2 -- minimal number of columns to use for the line number {default 4}
-vim.opt.signcolumn = "yes" -- always show the sign column, otherwise it would shift the text each time
-vim.opt.wrap = true -- soft wrap long lines (don't display as a single line)
-vim.opt.colorcolumn = "80" -- add vertical bar at 80 character mark
-vim.opt.scrolloff = 8 -- minimal number of screen lines to keep above and below the cursor
-vim.opt.sidescrolloff = 8 -- minimal number of screen columns to keep to the left and right of the cursor if wrap is `false`
-vim.opt.guifont = "monospace:h17" -- the font used in graphical neovim applications
-vim.opt.fillchars.eob = " " -- show empty lines at the end of a buffer as ` ` {default `~`}
-vim.opt.shortmess:append "c" -- hide all the completion messages, e.g. "-- XXX completion (YYY)", "match 1 of 2", "The only match", "Pattern not found"
-vim.opt.whichwrap:append "<,>,[,],h,l" -- keys allowed to move to the previous/next line when the beginning/end of line is reached
-vim.opt.iskeyword:append "-" -- treats words with `-` as single words
-vim.opt.formatoptions:remove { "c", "r", "o" } -- This is a sequence of letters which describes how automatic formatting is to be done
-vim.opt.linebreak = true
-vim.opt.foldmethod = "indent" -- Lines with equal indent form a fold. (default: manual)
-vim.opt.foldnestmax = 10 -- deepest fold is 10 levels (default: 20)
-vim.opt.foldlevelstart = 10 -- set initial fold level to max (which prevents immediately nesting everything upon first fold) (default: -1)
+local opt = vim.opt
+
+-- General
+opt.mouse = "c" -- Only allow mouse in command-line mode
+opt.clipboard = "unnamedplus" -- Use system clipboard
+opt.fileencoding = "utf-8" -- File encoding
+opt.termguicolors = true -- Enable 24-bit RGB colors
+
+-- UI
+opt.number = true -- Show line numbers
+opt.relativenumber = true -- Show relative line numbers
+opt.cursorline = true -- Highlight current line
+opt.signcolumn = "yes" -- Always show sign column to prevent text shifting
+opt.colorcolumn = "80" -- Show column border at 80 chars
+opt.showmode = false -- Don't show mode (shown in statusline)
+opt.showcmd = false -- Don't show partial commands
+opt.ruler = false -- Don't show ruler (shown in statusline)
+opt.laststatus = 3 -- Global statusline
+opt.cmdheight = 1 -- Command line height
+opt.pumheight = 10 -- Popup menu height
+opt.showtabline = 0 -- Never show tabline
+opt.numberwidth = 2 -- Minimal number width
+opt.guifont = "monospace:h17" -- GUI font
+opt.fillchars.eob = " " -- Hide end-of-buffer tildes
+
+-- Splitting
+opt.splitbelow = true -- Horizontal splits go below
+opt.splitright = true -- Vertical splits go right
+
+-- Indentation
+opt.expandtab = true -- Use spaces instead of tabs
+opt.shiftwidth = 2 -- Number of spaces for indentation
+opt.tabstop = 2 -- Number of spaces tabs count for
+opt.smartindent = true -- Smart auto-indenting
+
+-- Search
+opt.hlsearch = true -- Highlight search results
+opt.ignorecase = true -- Ignore case in search
+opt.smartcase = true -- Override ignorecase if search has uppercase
+
+-- Wrapping & Scrolling
+opt.wrap = true -- Wrap long lines
+opt.linebreak = true -- Wrap at word boundaries
+opt.scrolloff = 8 -- Lines to keep above/below cursor
+opt.sidescrolloff = 8 -- Columns to keep left/right of cursor
+
+-- Files & Buffers
+opt.autoread = true -- Auto-reload files changed outside vim
+opt.backup = false -- Don't create backup files
+opt.swapfile = false -- Don't create swap files
+opt.writebackup = false -- Don't backup before overwriting file
+opt.undofile = true -- Enable persistent undo
+
+-- Completion
+opt.completeopt = { "menuone", "noselect" } -- Completion options
+opt.shortmess:append "c" -- Don't show completion messages
+opt.conceallevel = 0 -- Don't hide characters (e.g., `` in markdown)
+
+-- Timing
+opt.updatetime = 300 -- Faster completion and swap write (default: 4000ms)
+opt.timeoutlen = 1000 -- Time to wait for mapped sequence
+
+-- Behavior
+opt.whichwrap:append "<,>,[,],h,l" -- Allow h/l to wrap lines
+opt.iskeyword:append "-" -- Treat dash as part of word
+opt.formatoptions:remove { "c", "r", "o" } -- Don't auto-continue comments
+
+-- Folding
+opt.foldmethod = "indent" -- Fold based on indentation
+opt.foldnestmax = 10 -- Maximum fold nesting
+opt.foldlevelstart = 10 -- Start with all folds open

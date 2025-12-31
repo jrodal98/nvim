@@ -8,6 +8,22 @@
       {
         "language": "python",
         "path": "./python.json"
+      },
+      {
+        "language": "rust",
+        "path": "./rust.json"
+      },
+      {
+        "language": "starlark",
+        "path": "./buck.json"
+      },
+      {
+        "language": "buck",
+        "path": "./buck.json"
+      },
+      {
+        "language": "bzl",
+        "path": "./buck.json"
       }
     ]
   }

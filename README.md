@@ -27,6 +27,84 @@ Next, follow these steps to finish setting up the config:
 
 Setup is now complete!
 
+## Plugin System
+
+This configuration uses [lazy.nvim](https://github.com/folke/lazy.nvim) for plugin management with a custom `spec()` function for organizing plugins.
+
+### Using the `spec()` Function
+
+Plugins are loaded using the `spec()` function in `init.lua`:
+
+```lua
+spec "user.treesitter"
+spec "user.telescope"
+spec "user.dmt"
+```
+
+Each `spec()` call loads a plugin specification from `lua/user/<plugin>.lua`. The spec function:
+
+- Imports the plugin specification for lazy.nvim
+- Automatically detects local plugins and configures them
+- Supports both external (GitHub) and local plugins
+
+### Local Plugins Directory
+
+Local plugins are stored in `lua/local_plugins/` with the following structure:
+
+```
+lua/local_plugins/
+├── plugin_name/
+│   ├── init.lua      # Main plugin code
+│   ├── config.lua    # Configuration and defaults
+│   └── terminal.lua  # Additional modules
+```
+
+### Auto-Detection
+
+When you call `spec("user.plugin_name")`, the spec function automatically:
+
+1. Checks if `lua/local_plugins/plugin_name/` exists
+2. If found, sets `dir`, `name`, and `main` fields automatically
+3. Loads the plugin as a lazy.nvim local plugin
+
+This means you can create a simple spec file like:
+
+```lua
+-- lua/user/plugin_name.lua
+return {
+  event = { "BufReadPost", "BufNewFile" },
+  lazy = false,
+  opts = {
+    terminal_cmd = "dmt",
+    split_side = "right",
+  },
+}
+```
+
+And the spec function handles the rest! No need to manually configure `dir`, `name`, or `main` fields.
+
+### Creating a Local Plugin
+
+To create a new local plugin:
+
+1. Create a directory: `lua/local_plugins/<plugin-name>/`
+2. Create `init.lua` with a `setup()` function:
+
+   ```lua
+   local M = {}
+
+   function M.setup(opts)
+     -- Plugin initialization
+   end
+
+   return M
+   ```
+
+3. Create a spec file: `lua/user/<plugin-name>.lua`
+4. Add `spec "user.<plugin-name>"` to `init.lua`
+
+The plugin will be automatically detected and configured!
+
 ## Docker
 
 ### Run instructions
@@ -90,3 +168,7 @@ To upload it to ghcr without a github action...
 - [nvim-basic-ide](https://github.com/LunarVim/nvim-basic-ide)
 - [Neovim-from-scratch](https://github.com/LunarVim/Neovim-from-scratch)
 - [NvChad](https://github.com/NvChad/NvChad)
+
+## Other notes
+
+- To get the clipboard to work properly in WSL, install win32yank: `winget install --id=equalsraf.win32yank -e` and then it will "just work"

@@ -1,0 +1,42 @@
+{
+  "windows": {
+    "prefix": "windows",
+    "body": ["ovr_config//os:windows"],
+    "description": "windows os type"
+  },
+  "macos": {
+    "prefix": "macos",
+    "body": ["ovr_config//os:macos"],
+    "description": "macos os type"
+  },
+  "linux": {
+    "prefix": "linux",
+    "body": ["ovr_config//os:linux"],
+    "description": "linux os type"
+  },
+  "osconfig": {
+    "prefix": "osconfig",
+    "body": ["ovr_config//os:"],
+    "description": "ovr_config os type"
+  },
+  "ecw": {
+    "prefix": "ecw",
+    "body": ["exec_compatible_with = select({\"DEFAULT\": [], \"ovr_config//os:linux\": [\"ovr_config//os:linux\"], \"ovr_config//os:macos\": [\"ovr_config//os:macos\"], \"ovr_config//os:windows\": [\"ovr_config//os:windows\"]}),"],
+    "description": "exec_compatible_with target -> host only"
+  },
+  "ecw_windows": {
+    "prefix": "ecw_windows",
+    "body": ["exec_compatible_with = [\"ovr_config//os:windows\"],"],
+    "description": "exec_compatible_with windows only"
+  },
+  "ecw_macos": {
+    "prefix": "ecw_macos",
+    "body": ["exec_compatible_with = [\"ovr_config//os:macos\"],"],
+    "description": "exec_compatible_with macos only"
+  },
+  "ecw_linux": {
+    "prefix": "ecw_linux",
+    "body": ["exec_compatible_with = [\"ovr_config//os:linux\"],"],
+    "description": "exec_compatible_with linux only"
+  }
+}
