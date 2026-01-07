@@ -136,7 +136,7 @@ require("lazy").setup {
    defaults = {
       lazy = false, -- Don't lazy-load by default (plugins opt-in to lazy loading)
    },
-   lockfile = lockfile,
+   lockfile = vim.fn.stdpath("config") .. "/" .. lockfile,
    performance = {
       rtp = {
          disabled_plugins = {
