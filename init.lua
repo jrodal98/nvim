@@ -85,6 +85,7 @@ if not vim.g.vscode then
    add_spec "user.plugins.utilities.flatten"
    add_spec "user.plugins.utilities.toggleterm"
    add_spec "user.plugins.utilities.notify"
+   add_spec "user.plugins.utilities.sidekick"
 
    -- Try to load all Meta-specific plugins at once
    local ok_meta, meta_specs = pcall(require, "meta-private.plugins")
