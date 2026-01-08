@@ -4,6 +4,7 @@ return {
       -- Disable NES (Next Edit Suggestions) since it requires Copilot
       nes = { enabled = false },
       cli = {
+         picker = "snacks",
          win = {
             layout = "right",
             split = {

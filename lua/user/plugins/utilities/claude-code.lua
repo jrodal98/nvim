@@ -1,9 +1,6 @@
 return {
    "coder/claudecode.nvim",
    event = { "BufReadPre", "BufNewFile" },
-   dependencies = {
-      "folke/snacks.nvim",
-   },
    opts = {
       terminal = {
          split_side = "right",

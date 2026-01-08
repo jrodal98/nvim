@@ -96,6 +96,3 @@ keymap("n", "<leader>sc", "<cmd>setlocal spell! spelllang=en_us<CR>", { desc = "
 
 -- Format JSON (visual mode)
 keymap("v", "<leader>fj", ":!python3 -m json.tool<CR>", { desc = "Format JSON" })
-
--- Git
-keymap("n", "<leader>gg", "<cmd>lua _LAZYGIT_TOGGLE()<CR>", { desc = "Toggle LazyGit" })

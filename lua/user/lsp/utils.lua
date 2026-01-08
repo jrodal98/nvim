@@ -87,11 +87,7 @@ local function lsp_keymaps(bufnr)
       vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, desc = desc })
    end
 
-   -- Navigation
-   map("n", "gD", vim.lsp.buf.declaration, "Go to declaration")
-   map("n", "gd", vim.lsp.buf.definition, "Go to definition")
-   map("n", "gI", vim.lsp.buf.implementation, "Go to implementation")
-   map("n", "gr", vim.lsp.buf.references, "Show references")
+   -- Navigation (gd, gD, gI, gr handled by snacks.nvim picker)
    map("n", "K", vim.lsp.buf.hover, "Show hover documentation")
 
    -- Diagnostics

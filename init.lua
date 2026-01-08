@@ -55,7 +55,6 @@ if not vim.g.vscode then
    -- File Management
    add_spec "user.plugins.files.nvim-tree"
    add_spec "user.plugins.files.oil"
-   add_spec "user.plugins.files.telescope"
    add_spec "user.plugins.files.tv"
    add_spec "user.plugins.files.bbye"
 
@@ -84,7 +83,6 @@ if not vim.g.vscode then
    -- Utilities
    add_spec "user.plugins.utilities.flatten"
    add_spec "user.plugins.utilities.toggleterm"
-   add_spec "user.plugins.utilities.notify"
    add_spec "user.plugins.utilities.sidekick"
 
    -- Try to load all Meta-specific plugins at once
@@ -108,6 +106,7 @@ end
 add_spec "user.plugins.core.plenary"
 add_spec "user.plugins.core.treesitter"
 add_spec "user.plugins.core.flash"
+add_spec "user.plugins.core.snacks"
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
