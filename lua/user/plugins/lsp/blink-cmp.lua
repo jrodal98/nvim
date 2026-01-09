@@ -14,13 +14,13 @@ return {
          -- Only load codeium on non-Meta devices
          cond = function()
             local dotgk = require("init-utils.dotgk-wrapper").get()
-            return not dotgk.check("meta")
+            return not dotgk.check "meta"
          end,
          config = function()
-            require("codeium").setup({
+            require("codeium").setup {
                -- Disable cmp source since we're using blink
                enable_cmp_source = false,
-            })
+            }
          end,
       },
    },
@@ -83,10 +83,23 @@ return {
             keymap = {
                preset = "cmdline",
             },
+            -- Cmdline-specific sources
+            sources = { "buffer", "cmdline" },
             completion = {
                menu = {
-                  auto_show = false,
+                  auto_show = true,
                },
+               ghost_text = {
+                  enabled = true,
+               },
+            },
+         },
+
+         -- Terminal completion (requires Neovim 0.11+)
+         term = {
+            enabled = true,
+            keymap = {
+               preset = "inherit",
             },
          },
 
@@ -97,7 +110,7 @@ return {
 
       -- Check if we're on a Meta device
       local dotgk = require("init-utils.dotgk-wrapper").get()
-      local is_meta = dotgk.check("meta")
+      local is_meta = dotgk.check "meta"
 
       -- Load Meta-specific configuration from meta-private
       if is_meta then
@@ -107,7 +120,8 @@ return {
             if meta_config then
                -- Merge fuzzy config and providers
                config.fuzzy = meta_config.fuzzy
-               config.sources.providers = vim.tbl_deep_extend("force", config.sources.providers, meta_config.sources.providers)
+               config.sources.providers =
+                  vim.tbl_deep_extend("force", config.sources.providers, meta_config.sources.providers)
                -- Add meta source names to default list
                if meta_config.meta_source_names then
                   for _, source_name in ipairs(meta_config.meta_source_names) do
