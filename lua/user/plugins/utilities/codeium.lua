@@ -1,11 +1,3 @@
-local M = {
-   "Exafunction/codeium.nvim",
-   event = "InsertEnter",
-   dependencies = {
-      "nvim-lua/plenary.nvim",
-      "hrsh7th/nvim-cmp",
-   },
-   opts = {},
-}
-
-return M
+-- Codeium is now configured as a dependency of blink.cmp
+-- See lua/user/plugins/lsp/blink-cmp.lua for the configuration
+return {}

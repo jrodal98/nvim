@@ -1,10 +1,8 @@
 local M = {}
 
--- Setup LSP capabilities with nvim-cmp
-local cmp_nvim_lsp = require "cmp_nvim_lsp"
+-- Setup base LSP capabilities
 M.capabilities = vim.lsp.protocol.make_client_capabilities()
 M.capabilities.textDocument.completion.completionItem.snippetSupport = true
-M.capabilities = cmp_nvim_lsp.default_capabilities(M.capabilities)
 
 -- Setup diagnostic signs and configuration
 M.setup = function()

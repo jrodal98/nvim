@@ -72,7 +72,7 @@ if not vim.g.vscode then
    add_spec "user.plugins.lsp.trouble"
    add_spec "user.plugins.lsp.fidget"
    add_spec "user.plugins.lsp.tiny-inline-diagnostic"
-   add_spec "user.plugins.lsp.cmp"
+   add_spec "user.plugins.lsp.blink-cmp"
 
    -- SCM (Source Control Management)
    add_spec "user.plugins.scm.gitsigns"

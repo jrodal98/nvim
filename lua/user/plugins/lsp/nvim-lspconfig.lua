@@ -101,6 +101,12 @@ return {
             opts = vim.tbl_deep_extend("force", custom_config, opts)
          end
 
+         -- Merge blink.cmp capabilities if available
+         local ok, blink = pcall(require, "blink.cmp")
+         if ok then
+            opts.capabilities = blink.get_lsp_capabilities(opts.capabilities)
+         end
+
          vim.lsp.config(server, opts)
          vim.lsp.enable(server)
       end
