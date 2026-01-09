@@ -14,13 +14,13 @@ return {
          -- Only load codeium on non-Meta devices
          cond = function()
             local dotgk = require("init-utils.dotgk-wrapper").get()
-            return not dotgk.check "meta"
+            return not dotgk.check("meta")
          end,
          config = function()
-            require("codeium").setup {
+            require("codeium").setup({
                -- Disable cmp source since we're using blink
                enable_cmp_source = false,
-            }
+            })
          end,
       },
    },
@@ -29,67 +29,10 @@ return {
    ---@module 'blink.cmp'
    ---@type blink.cmp.Config
    opts = function()
-      -- Check if we're on a Meta device
-      local dotgk = require("init-utils.dotgk-wrapper").get()
-      local is_meta = dotgk.check "meta"
-
-      -- Check for metamate if available (Meta inline AI suggestions)
-      local metamate = nil
-      local ok, metamate_provider = pcall(require, "meta-private.cmp.metamate")
-      if ok then
-         metamate = metamate_provider.get()
-      end
-
-      -- Build sources list based on environment
-      local sources = { "lsp", "path", "snippets", "buffer" }
-      local providers = {}
-
-      -- Add Meta-specific sources for hgcommit files
-      if is_meta then
-         table.insert(sources, "meta_title")
-         table.insert(sources, "meta_tags")
-         table.insert(sources, "meta_tasks")
-         table.insert(sources, "meta_revsub")
-
-         providers.meta_title = {
-            name = "MetaTitle",
-            module = "meta.cmp.title",
-         }
-         providers.meta_tags = {
-            name = "MetaTags",
-            module = "meta.cmp.tags",
-         }
-         providers.meta_tasks = {
-            name = "MetaTasks",
-            module = "meta.cmp.tasks",
-         }
-         providers.meta_revsub = {
-            name = "MetaRevSub",
-            module = "meta.cmp.revsub",
-         }
-      else
-         -- Only add codeium on non-Meta devices
-         table.insert(sources, "codeium")
-         providers.codeium = {
-            name = "Codeium",
-            module = "codeium.blink",
-            async = true,
-         }
-      end
-
-      return {
-         -- Fuzzy configuration with Meta proxy support
-         fuzzy = is_meta and {
-            prebuilt_binaries = {
-               proxy = {
-                  url = "http://fwdproxy:8080",
-               },
-            },
-         } or {},
-
+      -- Base configuration (works on all devices)
+      local config = {
          keymap = {
-            preset = "default", -- C-y to accept, Tab/S-Tab to navigate
-            -- Additional keymaps matching your nvim-cmp config
+            preset = "default",
             ["<C-p>"] = { "select_prev", "fallback" },
             ["<C-n>"] = { "select_next", "fallback" },
             ["<C-b>"] = { "scroll_documentation_up", "fallback" },
@@ -127,34 +70,65 @@ return {
          },
 
          sources = {
-            default = sources,
-            providers = providers,
+            default = { "lsp", "path", "snippets", "buffer" },
+            providers = {},
          },
 
          snippets = {
             preset = "luasnip",
          },
 
-         -- Cmdline completion
          cmdline = {
             enabled = true,
             keymap = {
-               preset = "cmdline", -- Tab to show/navigate
+               preset = "cmdline",
             },
             completion = {
                menu = {
-                  auto_show = false, -- Default behavior, press Tab to show
+                  auto_show = false,
                },
             },
          },
 
-         -- Signature help
          signature = {
-            enabled = false, -- Keep disabled for now, can enable later
+            enabled = false,
          },
       }
+
+      -- Check if we're on a Meta device
+      local dotgk = require("init-utils.dotgk-wrapper").get()
+      local is_meta = dotgk.check("meta")
+
+      -- Load Meta-specific configuration from meta-private
+      if is_meta then
+         local meta_ok, blink_config_provider = pcall(require, "meta-private.blink.config")
+         if meta_ok then
+            local meta_config = blink_config_provider.get()
+            if meta_config then
+               -- Merge fuzzy config and providers
+               config.fuzzy = meta_config.fuzzy
+               config.sources.providers = vim.tbl_deep_extend("force", config.sources.providers, meta_config.sources.providers)
+               -- Add meta source names to default list
+               if meta_config.meta_source_names then
+                  for _, source_name in ipairs(meta_config.meta_source_names) do
+                     table.insert(config.sources.default, source_name)
+                  end
+               end
+            end
+         end
+      else
+         -- Add codeium on non-Meta devices
+         table.insert(config.sources.default, "codeium")
+         config.sources.providers.codeium = {
+            name = "Codeium",
+            module = "codeium.blink",
+            async = true,
+         }
+      end
+
+      return config
    end,
-   -- Extend sources.default instead of overwriting it
+
    opts_extend = { "sources.default" },
 
    -- Set up metamate integration after blink.cmp loads
