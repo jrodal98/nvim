@@ -53,6 +53,7 @@ function M.config()
       },
       colored = false,
    }
+
    lualine.setup {
       options = {
          globalstatus = true,

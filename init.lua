@@ -55,7 +55,6 @@ if not vim.g.vscode then
    -- File Management
    add_spec "user.plugins.files.oil"
    add_spec "user.plugins.files.tv"
-   add_spec "user.plugins.files.bbye"
 
    -- Editing
    add_spec "user.plugins.editing.autopairs"

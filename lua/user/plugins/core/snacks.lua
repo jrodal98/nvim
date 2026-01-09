@@ -5,6 +5,7 @@ return {
    ---@type snacks.Config
    opts = {
       bigfile = { enabled = true },
+      bufdelete = { enabled = true },
       explorer = { enabled = true },
       input = { enabled = true },
       notifier = { enabled = true, timeout = 3000 },
@@ -13,6 +14,15 @@ return {
       lazygit = { enabled = true },
    },
    keys = {
+      -- Buffer delete
+      {
+         "<leader>x",
+         function()
+            Snacks.bufdelete()
+         end,
+         desc = "Delete buffer",
+      },
+
       -- Explorer
       {
          "<leader>e",
