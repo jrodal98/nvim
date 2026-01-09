@@ -97,7 +97,7 @@ return {
 
          -- Terminal completion (requires Neovim 0.11+)
          term = {
-            enabled = true,
+            enabled = false,
             keymap = {
                preset = "inherit",
             },

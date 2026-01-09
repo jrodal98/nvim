@@ -89,9 +89,6 @@ if not vim.g.vscode then
       for _, plugin_spec in ipairs(meta_specs) do
          table.insert(spec, plugin_spec)
       end
-   else
-      -- Non-Meta fallback plugins
-      add_spec "user.plugins.utilities.codeium"
    end
 else
    -- VSCode integration
