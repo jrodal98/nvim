@@ -5,6 +5,7 @@ return {
    ---@type snacks.Config
    opts = {
       bigfile = { enabled = true },
+      explorer = { enabled = true },
       input = { enabled = true },
       notifier = { enabled = true, timeout = 3000 },
       picker = { enabled = true },
@@ -12,6 +13,15 @@ return {
       lazygit = { enabled = true },
    },
    keys = {
+      -- Explorer
+      {
+         "<leader>e",
+         function()
+            Snacks.explorer()
+         end,
+         desc = "File explorer",
+      },
+
       -- File finding (matches previous telescope keymaps)
       {
          "<leader>ff",

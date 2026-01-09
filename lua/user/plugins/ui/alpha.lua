@@ -19,12 +19,12 @@ function M.config()
       [[ \/_/\/_/\/____/\/___/  \/__/    \/_/\/_/\/_/\/_/]],
    }
    dashboard.section.buttons.val = {
-      dashboard.button("f", " " .. " Find file", "<cmd>lua require('telescope.builtin').find_files()<cr>"),
-      dashboard.button("e", " " .. " New file", ":ene <BAR> startinsert <CR>"),
-      dashboard.button("o", "󰄉 " .. " Recent files", "<cmd>lua require('telescope.builtin').oldfiles()<cr>"),
-      dashboard.button("w", " " .. " Find text", "<cmd>lua require('telescope.builtin').live_grep()<cr>"),
-      dashboard.button("c", " " .. " Config", ":e $MYVIMRC <CR>"),
-      dashboard.button("q", " " .. " Quit", ":qa<CR>"),
+      dashboard.button("f", "" .. " Find file", "<cmd>lua Snacks.picker.files()<cr>"),
+      dashboard.button("e", "" .. " New file", ":ene <BAR> startinsert <CR>"),
+      dashboard.button("o", "󰄉 " .. " Recent files", "<cmd>lua Snacks.picker.recent()<cr>"),
+      dashboard.button("w", "" .. " Find text", "<cmd>lua Snacks.picker.grep()<cr>"),
+      dashboard.button("c", "" .. " Config", "<cmd>lua Snacks.picker.files({ cwd = vim.fn.stdpath('config') })<cr>"),
+      dashboard.button("q", "" .. " Quit", ":qa<CR>"),
    }
 
    dashboard.section.footer.opts.hl = "Type"

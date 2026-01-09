@@ -53,7 +53,6 @@ if not vim.g.vscode then
    add_spec "user.plugins.ui.render-markdown"
 
    -- File Management
-   add_spec "user.plugins.files.nvim-tree"
    add_spec "user.plugins.files.oil"
    add_spec "user.plugins.files.tv"
    add_spec "user.plugins.files.bbye"
