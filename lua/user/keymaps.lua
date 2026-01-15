@@ -14,6 +14,13 @@ keymap({ "n", "v" }, "<Space>", "<Nop>", { silent = true })
 -- Save file
 keymap("n", "<leader>w", "<cmd>w<CR>", { desc = "Save file" })
 
+-- Open Oil file explorer (except when already in Oil)
+keymap("n", "<leader>E", function()
+   if vim.bo.filetype ~= "oil" then
+      vim.cmd.Oil()
+   end
+end, { desc = "Open Oil file explorer" })
+
 -- ========================================
 -- Navigation
 -- ========================================
