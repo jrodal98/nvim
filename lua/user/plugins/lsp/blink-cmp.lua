@@ -108,6 +108,9 @@ return {
          },
       }
 
+      require("luasnip.loaders.from_vscode").lazy_load { paths = "./snippets" }
+      require("luasnip.loaders.from_vscode").lazy_load()
+
       -- Check if we're on a Meta device
       local dotgk = require("init-utils.dotgk-wrapper").get()
       local is_meta = dotgk.check "meta"
