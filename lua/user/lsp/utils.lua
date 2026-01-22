@@ -23,7 +23,7 @@ local function organize_imports(bufnr)
       return
    end
 
-   local params = vim.lsp.util.make_range_params()
+   local params = vim.lsp.util.make_range_params(nil, clients[1].offset_encoding)
    params.context = { diagnostics = vim.diagnostic.get() }
 
    local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params)
