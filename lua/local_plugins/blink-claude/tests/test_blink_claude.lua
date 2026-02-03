@@ -200,6 +200,8 @@ local function reset_module(fixtures)
   local blink_claude = require('local_plugins.blink-claude')
   blink_claude.configure({ home_dir = fixtures.home })
   blink_claude.reset_cache()
+  -- Also reset nested placeholder support cache
+  blink_claude.configure({ nested_placeholders_supported = nil })
   return blink_claude.new()
 end
 
@@ -618,6 +620,9 @@ function M.test_argument_hints()
   local bufnr = create_test_buffer()
   local ctx = { line = "/", cursor = {1, 1}, bufnr = bufnr }
 
+  -- Check if LuaSnip is available for nested placeholder support
+  local has_luasnip = pcall(require, 'luasnip')
+
   source:get_completions(ctx, function(response)
     local items = response.items
 
@@ -635,32 +640,46 @@ function M.test_argument_hints()
         -- Should use Snippet insertTextFormat
         assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.Snippet, "Uses Snippet format")
 
-        -- Should have nested snippet for optional arg with value
-        -- Expected: with-args ${1:PROMPT} ${2:--option ${3:VALUE}}
+        -- Should have correct tab stops based on LuaSnip availability
         assert_contains(item.insertText, "${1:PROMPT}", "Required arg as tab stop 1")
-        assert_contains(item.insertText, "${2:--option ${3:VALUE}}", "Nested snippet for optional flag with value")
+
+        if has_luasnip then
+          -- With LuaSnip: nested placeholders
+          assert_contains(item.insertText, "${2:--option ${3:VALUE}}", "Nested snippet for optional flag with value")
+        else
+          -- Without LuaSnip: simple sequential placeholders
+          assert_contains(item.insertText, "${2:--option VALUE}", "Simple placeholder for optional flag")
+        end
 
         break
       end
     end
     assert_true(found_with_args, "Found command with argument hint")
 
-    -- Test nested snippets with multiple optional args
+    -- Test multiple optional args
     local found_nested = false
     for _, item in ipairs(items) do
       if item.label == "/nested-args" then
         found_nested = true
 
-        -- Expected: nested-args ${1:TASK} ${2:--max-iterations ${3:N}} ${4:--completion-promise ${5:TEXT}} ${6:--auto-fix}
         assert_contains(item.insertText, "${1:TASK}", "Required arg TASK")
-        assert_contains(item.insertText, "${2:--max-iterations ${3:N}}", "Nested snippet for --max-iterations N")
-        assert_contains(item.insertText, "${4:--completion-promise ${5:TEXT}}", "Nested snippet for --completion-promise TEXT")
-        assert_contains(item.insertText, "${6:--auto-fix}", "Simple optional flag without value")
+
+        if has_luasnip then
+          -- With LuaSnip: nested placeholders
+          assert_contains(item.insertText, "${2:--max-iterations ${3:N}}", "Nested snippet for --max-iterations N")
+          assert_contains(item.insertText, "${4:--completion-promise ${5:TEXT}}", "Nested snippet for --completion-promise TEXT")
+          assert_contains(item.insertText, "${6:--auto-fix}", "Simple optional flag without value")
+        else
+          -- Without LuaSnip: simple sequential placeholders
+          assert_contains(item.insertText, "${2:--max-iterations N}", "Simple placeholder for --max-iterations N")
+          assert_contains(item.insertText, "${3:--completion-promise TEXT}", "Simple placeholder for --completion-promise TEXT")
+          assert_contains(item.insertText, "${4:--auto-fix}", "Simple optional flag")
+        end
 
         break
       end
     end
-    assert_true(found_nested, "Found command with nested snippets")
+    assert_true(found_nested, "Found command with tab stops")
 
     -- Test long hint truncation
     local found_long_hint = false
@@ -701,11 +720,18 @@ function M.test_argument_hints()
     end
     assert_true(found_no_hint, "Found command without hint")
 
-    print("  ✓ Argument hints shown in labelDetails.detail")
-    print("  ✓ Snippet format used for commands with hints")
-    print("  ✓ Nested tab stops for optional args with values")
-    print("  ✓ Simple tab stops for optional flags without values")
-    print("  ✓ Custom LuaSnip config enables select mode for nested placeholders")
+    if has_luasnip then
+      print("  ✓ Argument hints shown in labelDetails.detail")
+      print("  ✓ Snippet format used for commands with hints")
+      print("  ✓ Nested tab stops for optional args with values (LuaSnip)")
+      print("  ✓ Simple tab stops for optional flags without values")
+      print("  ✓ VSCode-style select mode with nested placeholders")
+    else
+      print("  ✓ Argument hints shown in labelDetails.detail")
+      print("  ✓ Snippet format used for commands with hints")
+      print("  ✓ Sequential tab stops (LuaSnip not available)")
+      print("  ✓ Fallback to simple placeholders works correctly")
+    end
     print("  ✓ Long hints truncated in display")
     print("  ✓ Full hints preserved in insertText")
     print("  ✓ Backward compatible with commands without hints")

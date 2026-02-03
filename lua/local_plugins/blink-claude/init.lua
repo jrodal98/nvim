@@ -18,98 +18,6 @@ local config = {
   home_dir = nil, -- Will use vim.env.HOME if nil
 }
 
--- Configure LuaSnip to handle nested placeholders with select mode (VSCode-style behavior)
--- This allows ${2:--flag ${3:VALUE}} to select the whole thing on tab, then tab again to select VALUE
-local function setup_luasnip_nested_placeholders()
-  local ok, luasnip = pcall(require, 'luasnip')
-  if not ok then return end
-
-  local util = require("luasnip.util.util")
-  local node_util = require("luasnip.nodes.util")
-
-  luasnip.setup({
-    parser_nested_assembler = function(_, snippetNode)
-      local select = function(snip, no_move, dry_run)
-        if dry_run then
-          return
-        end
-        snip:focus()
-        -- make sure the inner nodes will all shift to one side when the
-        -- entire text is replaced.
-        snip:subtree_set_rgrav(true)
-        -- fix own extmark-gravities, subtree_set_rgrav affects them as well.
-        snip.mark:set_rgravs(false, true)
-
-        -- SELECT all text inside the snippet.
-        if not no_move then
-          require("luasnip.util.feedkeys").feedkeys_insert("<Esc>")
-          node_util.select_node(snip)
-        end
-      end
-
-      local original_extmarks_valid = snippetNode.extmarks_valid
-      function snippetNode:extmarks_valid()
-        -- the contents of this snippetNode are supposed to be deleted, and
-        -- we don't want the snippet to be considered invalid because of
-        -- that -> always return true.
-        return true
-      end
-
-      function snippetNode:init_dry_run_active(dry_run)
-        if dry_run and dry_run.active[self] == nil then
-          dry_run.active[self] = self.active
-        end
-      end
-
-      function snippetNode:is_active(dry_run)
-        return (not dry_run and self.active) or (dry_run and dry_run.active[self])
-      end
-
-      function snippetNode:jump_into(dir, no_move, dry_run)
-        self:init_dry_run_active(dry_run)
-        if self:is_active(dry_run) then
-          -- inside snippet, but not selected.
-          if dir == 1 then
-            self:input_leave(no_move, dry_run)
-            return self.next:jump_into(dir, no_move, dry_run)
-          else
-            select(self, no_move, dry_run)
-            return self
-          end
-        else
-          -- jumping in from outside snippet.
-          self:input_enter(no_move, dry_run)
-          if dir == 1 then
-            select(self, no_move, dry_run)
-            return self
-          else
-            return self.inner_last:jump_into(dir, no_move, dry_run)
-          end
-        end
-      end
-
-      -- this is called only if the snippet is currently selected.
-      function snippetNode:jump_from(dir, no_move, dry_run)
-        if dir == 1 then
-          if original_extmarks_valid(snippetNode) then
-            return self.inner_first:jump_into(dir, no_move, dry_run)
-          else
-            return self.next:jump_into(dir, no_move, dry_run)
-          end
-        else
-          self:input_leave(no_move, dry_run)
-          return self.prev:jump_into(dir, no_move, dry_run)
-        end
-      end
-
-      return snippetNode
-    end,
-  })
-end
-
--- Set up LuaSnip configuration when the module loads
-setup_luasnip_nested_placeholders()
-
 -- ============================================================================
 -- Section 1: File Scanner Module (Pure Functions)
 -- ============================================================================
@@ -203,9 +111,30 @@ local function parse_yaml_argument_hint(lines)
   return nil
 end
 
+--- Check if LuaSnip supports nested placeholders
+--- @return boolean True if nested placeholders are supported
+local function supports_nested_placeholders()
+  -- Cache the result since it won't change during a session
+  if config.nested_placeholders_supported ~= nil then
+    return config.nested_placeholders_supported
+  end
+
+  -- Check if LuaSnip is available
+  local ok, luasnip = pcall(require, 'luasnip')
+  if not ok then
+    config.nested_placeholders_supported = false
+    return false
+  end
+
+  -- Assume nested placeholders are supported if LuaSnip is loaded
+  -- The user's LuaSnip config should have parser_nested_assembler set up
+  config.nested_placeholders_supported = true
+  return true
+end
+
 --- Convert argument hint to LSP snippet format with nested tab stops
 --- @param hint string Argument hint text like "PROMPT [--option VALUE]"
---- @return string LSP snippet with tab stops (supports nesting with custom LuaSnip config)
+--- @return string LSP snippet with tab stops (supports nesting if LuaSnip configured)
 local function hint_to_snippet(hint)
   -- Split on whitespace, but keep bracketed content together
   local tokens = {}
@@ -237,30 +166,35 @@ local function hint_to_snippet(hint)
     table.insert(tokens, current_token)
   end
 
-  -- Convert tokens to snippets with nested tab stops for optional args
-  -- With our custom parser_nested_assembler, ${2:--flag ${3:VALUE}} works perfectly:
-  -- - Tab once: selects whole "--flag VALUE" (in select mode, backspace to delete)
-  -- - Tab twice: selects just "VALUE" (in select mode, type to replace)
+  -- Convert tokens to snippets
   local snippet_parts = {}
   local tab_index = 1
+  local use_nested = supports_nested_placeholders()
 
   for _, token in ipairs(tokens) do
     if token:match("^%[.+%]$") then
       -- Optional argument in brackets
       local inner = token:sub(2, -2) -- Remove [ and ]
 
-      -- Check if it's a flag with value pattern: --flag VALUE
-      -- Match --flag followed by space and value (allowing pipes, dashes, alphanumeric)
-      local flag, value = inner:match("^(%-%-[%w%-]+)%s+([^%s]+)$")
+      if use_nested then
+        -- Check if it's a flag with value pattern: --flag VALUE
+        local flag, value = inner:match("^(%-%-[%w%-]+)%s+([^%s]+)$")
 
-      if flag and value then
-        -- Create nested snippet: ${N:--flag ${N+1:VALUE}}
-        -- Tab once to select whole arg (can delete), tab twice to edit VALUE only
-        local snippet = string.format("${%d:%s ${%d:%s}}", tab_index, flag, tab_index + 1, value)
-        table.insert(snippet_parts, snippet)
-        tab_index = tab_index + 2
+        if flag and value then
+          -- Create nested snippet: ${N:--flag ${N+1:VALUE}}
+          -- Tab once: selects whole "--flag VALUE" (backspace to delete)
+          -- Tab twice: selects just "VALUE" (type to replace)
+          local snippet = string.format("${%d:%s ${%d:%s}}", tab_index, flag, tab_index + 1, value)
+          table.insert(snippet_parts, snippet)
+          tab_index = tab_index + 2
+        else
+          -- Simple optional flag (e.g., [--auto-fix])
+          local snippet = string.format("${%d:%s}", tab_index, inner)
+          table.insert(snippet_parts, snippet)
+          tab_index = tab_index + 1
+        end
       else
-        -- Just a simple optional text (e.g., [--auto-fix])
+        -- LuaSnip not available or not configured - use simple placeholders
         local snippet = string.format("${%d:%s}", tab_index, inner)
         table.insert(snippet_parts, snippet)
         tab_index = tab_index + 1
@@ -787,10 +721,13 @@ function source:get_completions(ctx, callback)
 end
 
 --- Configure the source (for testing)
---- @param opts table Options table with optional home_dir
+--- @param opts table Options table with optional home_dir and nested_placeholders_supported
 function source.configure(opts)
   if opts.home_dir then
     config.home_dir = opts.home_dir
+  end
+  if opts.nested_placeholders_supported ~= nil then
+    config.nested_placeholders_supported = opts.nested_placeholders_supported
   end
 end
 

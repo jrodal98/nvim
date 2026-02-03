@@ -2,12 +2,6 @@ return {
    "saghen/blink.cmp",
    version = "1.*",
    dependencies = {
-      "rafamadriz/friendly-snippets",
-      {
-         "L3MON4D3/LuaSnip",
-         version = "v2.*",
-         dependencies = "rafamadriz/friendly-snippets",
-      },
       {
          "Exafunction/codeium.nvim",
          cmd = "Codeium",
@@ -108,9 +102,6 @@ return {
          },
       }
 
-      require("luasnip.loaders.from_vscode").lazy_load { paths = "./snippets" }
-      require("luasnip.loaders.from_vscode").lazy_load()
-
       -- Check if we're on a Meta device
       local dotgk = require("init-utils.dotgk-wrapper").get()
       local is_meta = dotgk.check "meta"
@@ -144,7 +135,7 @@ return {
       end
 
       -- Add Claude Code completion if claude is available
-      if vim.fn.executable("claude") == 1 then
+      if vim.fn.executable "claude" == 1 then
          table.insert(config.sources.default, "claude")
          config.sources.providers.claude = {
             name = "Claude",
