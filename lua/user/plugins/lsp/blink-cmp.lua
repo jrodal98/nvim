@@ -70,15 +70,8 @@ return {
          },
 
          sources = {
-            default = { "lsp", "path", "snippets", "buffer", "claude" },
-            providers = {
-               -- Claude skills/commands completion for claude-prompt* files
-               claude = {
-                  name = "Claude",
-                  module = "local_plugins.blink-claude",
-                  score_offset = 10, -- Prioritize over buffer completions
-               },
-            },
+            default = { "lsp", "path", "snippets", "buffer" },
+            providers = {},
          },
 
          snippets = {
@@ -147,6 +140,16 @@ return {
             name = "Codeium",
             module = "codeium.blink",
             async = true,
+         }
+      end
+
+      -- Add Claude Code completion if claude is available
+      if vim.fn.executable("claude") == 1 then
+         table.insert(config.sources.default, "claude")
+         config.sources.providers.claude = {
+            name = "Claude",
+            module = "local_plugins.blink-claude",
+            score_offset = 10, -- Prioritize over buffer completions
          }
       end
 
