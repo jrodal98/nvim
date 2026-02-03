@@ -13,9 +13,20 @@
 --- @class blink.cmp.Source
 local source = {}
 
+-- Configuration for testing (can be overridden by tests)
+local config = {
+  home_dir = nil, -- Will use vim.env.HOME if nil
+}
+
 -- ============================================================================
 -- Section 1: File Scanner Module (Pure Functions)
 -- ============================================================================
+
+--- Get home directory (supports override for testing)
+--- @return string Home directory path
+local function get_home_dir()
+  return config.home_dir or vim.env.HOME or vim.fn.expand("~")
+end
 
 --- Skip YAML frontmatter and return the line number after it
 --- @param lines string[] File lines
@@ -171,18 +182,28 @@ local function create_completion_item(name, description, file_path, item_type, s
 end
 
 --- Walk up the directory tree and find all .claude directories
+--- Always includes ~/.claude first
 --- @return string[] List of .claude directory paths found (from cwd up to /)
 local function find_claude_directories()
   local claude_dirs = {}
+  local home = get_home_dir()
   local cwd = vim.fn.getcwd()
   local current = cwd
+  local home_claude = home .. "/.claude"
 
-  -- Walk up from cwd to root, including ~/.claude
+  -- Always include ~/.claude first
+  local stat = vim.uv.fs_stat(home_claude)
+  if stat and stat.type == "directory" then
+    table.insert(claude_dirs, home_claude)
+  end
+
+  -- Walk up from cwd to root
   while true do
     local claude_path = current .. "/.claude"
-    local stat = vim.uv.fs_stat(claude_path)
+    local path_stat = vim.uv.fs_stat(claude_path)
 
-    if stat and stat.type == "directory" then
+    -- Add if it exists and is not already added (avoid duplicate ~/.claude)
+    if path_stat and path_stat.type == "directory" and claude_path ~= home_claude then
       table.insert(claude_dirs, claude_path)
     end
 
@@ -208,7 +229,7 @@ end
 --- @return table<string, {path: string, source: string}> Map of plugin_name -> {path, source}
 local function parse_installed_plugins(cwd)
   local plugins = {}
-  local home = vim.env.HOME or vim.fn.expand("~")
+  local home = get_home_dir()
   local json_path = home .. "/.claude/plugins/installed_plugins.json"
 
   -- Check if file exists
@@ -320,7 +341,7 @@ end
 local function scan_skills_and_commands(bufnr)
   local items = {}
   local seen = {} -- Track labels to avoid duplicates
-  local home = vim.env.HOME or vim.fn.expand("~")
+  local home = get_home_dir()
   local cwd = vim.fn.getcwd()
   local home_claude = home .. "/.claude"
 
@@ -546,6 +567,20 @@ function source:get_completions(ctx, callback)
     is_incomplete_backward = false,
     items = items,
   })
+end
+
+--- Configure the source (for testing)
+--- @param opts table Options table with optional home_dir
+function source.configure(opts)
+  if opts.home_dir then
+    config.home_dir = opts.home_dir
+  end
+end
+
+--- Reset cache (for testing)
+function source.reset_cache()
+  cache.items = nil
+  cache.initialized = false
 end
 
 return source
