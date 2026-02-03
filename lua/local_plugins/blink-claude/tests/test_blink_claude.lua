@@ -632,10 +632,15 @@ function M.test_argument_hints()
       if item.label == "/with-args" then
         found_with_args = true
 
-        -- Should show hint in labelDetails.detail
-        assert_true(item.labelDetails.detail ~= nil, "Argument hint present in labelDetails.detail")
-        assert_contains(item.labelDetails.detail, "PROMPT", "Hint contains PROMPT")
-        assert_contains(item.labelDetails.detail, "[--option VALUE]", "Hint contains option")
+        -- Should show kind as Snippet
+        assert_eq(item.kind, vim.lsp.protocol.CompletionItemKind.Snippet, "Kind is Snippet")
+
+        -- Should NOT show hint in labelDetails.detail (too crowded in dropdown)
+        assert_true(item.labelDetails.detail == nil, "No detail in dropdown")
+
+        -- Should show hint in documentation (preview window)
+        assert_contains(item.documentation.value, "Usage:", "Hint shown in documentation")
+        assert_contains(item.documentation.value, "PROMPT [--option VALUE]", "Full hint in documentation")
 
         -- Should use Snippet insertTextFormat
         assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.Snippet, "Uses Snippet format")
@@ -681,39 +686,26 @@ function M.test_argument_hints()
     end
     assert_true(found_nested, "Found command with tab stops")
 
-    -- Test long hint truncation
-    local found_long_hint = false
-    for _, item in ipairs(items) do
-      if item.label == "/long-hint" then
-        found_long_hint = true
-
-        -- Detail should be truncated to 50 chars
-        assert_true(#item.labelDetails.detail <= 50, "Long hint truncated in detail")
-        assert_contains(item.labelDetails.detail, "...", "Truncation indicator present")
-
-        -- InsertText should have full snippet (not truncated)
-        assert_contains(item.insertText, "VERY_LONG_ARGUMENT_NAME", "Full hint in insertText")
-        assert_contains(item.insertText, "${1:", "Tab stops in full snippet")
-
-        break
-      end
-    end
-    assert_true(found_long_hint, "Found command with long hint")
-
     -- Test command without hint (backward compatibility)
     local found_no_hint = false
     for _, item in ipairs(items) do
       if item.label == "/test-cmd" then
         found_no_hint = true
 
-        -- Should NOT have detail
-        assert_true(item.labelDetails.detail == nil, "No hint means no detail")
+        -- Should be Snippet kind (even without argument hint, for consistency)
+        assert_eq(item.kind, vim.lsp.protocol.CompletionItemKind.Snippet, "Kind is Snippet")
 
-        -- Should use PlainText format
+        -- Should NOT have detail
+        assert_true(item.labelDetails.detail == nil, "No detail in dropdown")
+
+        -- Should use PlainText format (no snippet)
         assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.PlainText, "Uses PlainText format")
 
         -- Should not have snippet syntax
         assert_true(not item.insertText:match("%$%{"), "No snippet syntax in insertText")
+
+        -- Should NOT show Usage section in documentation
+        assert_true(not item.documentation.value:match("Usage:"), "No usage section without hint")
 
         break
       end
@@ -721,19 +713,18 @@ function M.test_argument_hints()
     assert_true(found_no_hint, "Found command without hint")
 
     if has_luasnip then
-      print("  ✓ Argument hints shown in labelDetails.detail")
-      print("  ✓ Snippet format used for commands with hints")
+      print("  ✓ Kind set to Snippet (not Event)")
+      print("  ✓ Argument hints shown in preview window (not dropdown)")
       print("  ✓ Nested tab stops for optional args with values (LuaSnip)")
       print("  ✓ Simple tab stops for optional flags without values")
       print("  ✓ VSCode-style select mode with nested placeholders")
     else
-      print("  ✓ Argument hints shown in labelDetails.detail")
-      print("  ✓ Snippet format used for commands with hints")
+      print("  ✓ Kind set to Snippet (not Event)")
+      print("  ✓ Argument hints shown in preview window (not dropdown)")
       print("  ✓ Sequential tab stops (LuaSnip not available)")
       print("  ✓ Fallback to simple placeholders works correctly")
     end
-    print("  ✓ Long hints truncated in display")
-    print("  ✓ Full hints preserved in insertText")
+    print("  ✓ Dropdown is clean (no hint clutter)")
     print("  ✓ Backward compatible with commands without hints")
   end)
 

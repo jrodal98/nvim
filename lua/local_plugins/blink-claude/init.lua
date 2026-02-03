@@ -15,7 +15,7 @@ local source = {}
 
 -- Configuration for testing (can be overridden by tests)
 local config = {
-  home_dir = nil, -- Will use vim.env.HOME if nil
+   home_dir = nil, -- Will use vim.env.HOME if nil
 }
 
 -- ============================================================================
@@ -25,205 +25,192 @@ local config = {
 --- Get home directory (supports override for testing)
 --- @return string Home directory path
 local function get_home_dir()
-  return config.home_dir or vim.env.HOME or vim.fn.expand("~")
+   return config.home_dir or vim.env.HOME or vim.fn.expand "~"
 end
 
 --- Skip YAML frontmatter and return the line number after it
 --- @param lines string[] File lines
 --- @return number Line number after frontmatter (1-indexed), or 1 if no frontmatter
 local function skip_frontmatter(lines)
-  if not lines[1] or lines[1] ~= "---" then
-    return 1
-  end
+   if not lines[1] or lines[1] ~= "---" then
+      return 1
+   end
 
-  for i = 2, #lines do
-    if lines[i] == "---" then
-      return i + 1
-    end
-  end
+   for i = 2, #lines do
+      if lines[i] == "---" then
+         return i + 1
+      end
+   end
 
-  return 1 -- Malformed frontmatter
+   return 1 -- Malformed frontmatter
 end
 
 --- Extract description from YAML frontmatter
 --- @param lines string[] File lines
 --- @return string|nil Description or nil
 local function parse_yaml_description(lines)
-  if not lines[1] or lines[1] ~= "---" then
-    return nil
-  end
+   if not lines[1] or lines[1] ~= "---" then
+      return nil
+   end
 
-  local in_description = false
-  local description_parts = {}
+   local in_description = false
+   local description_parts = {}
 
-  for i = 2, #lines do
-    local line = lines[i]
+   for i = 2, #lines do
+      local line = lines[i]
 
-    if line == "---" then
-      break
-    end
-
-    if line:match("^description:%s*(.*)$") then
-      local inline_desc = line:match("^description:%s*(.+)$")
-      if inline_desc then
-        return inline_desc:gsub('^"', ''):gsub('"$', '')
+      if line == "---" then
+         break
       end
-      in_description = true
-    elseif in_description then
-      if line:match("^%w+:") then
-        break
-      elseif line:match("^%s+(.+)$") then
-        local content = line:match("^%s+(.+)$")
-        table.insert(description_parts, content)
+
+      if line:match "^description:%s*(.*)$" then
+         local inline_desc = line:match "^description:%s*(.+)$"
+         if inline_desc then
+            return inline_desc:gsub('^"', ""):gsub('"$', "")
+         end
+         in_description = true
+      elseif in_description then
+         if line:match "^%w+:" then
+            break
+         elseif line:match "^%s+(.+)$" then
+            local content = line:match "^%s+(.+)$"
+            table.insert(description_parts, content)
+         end
       end
-    end
-  end
+   end
 
-  if #description_parts > 0 then
-    return table.concat(description_parts, " ")
-  end
+   if #description_parts > 0 then
+      return table.concat(description_parts, " ")
+   end
 
-  return nil
+   return nil
 end
 
 --- Extract argument-hint from YAML frontmatter
 --- @param lines string[] File lines
 --- @return string|nil Argument hint or nil
 local function parse_yaml_argument_hint(lines)
-  if not lines[1] or lines[1] ~= "---" then
-    return nil
-  end
+   if not lines[1] or lines[1] ~= "---" then
+      return nil
+   end
 
-  for i = 2, #lines do
-    local line = lines[i]
-    if line == "---" then
-      break
-    end
-
-    if line:match("^argument%-hint:%s*(.*)$") then
-      local hint = line:match("^argument%-hint:%s*(.+)$")
-      if hint then
-        return hint:gsub('^"', ''):gsub('"$', '')
+   for i = 2, #lines do
+      local line = lines[i]
+      if line == "---" then
+         break
       end
-    end
-  end
 
-  return nil
+      if line:match "^argument%-hint:%s*(.*)$" then
+         local hint = line:match "^argument%-hint:%s*(.+)$"
+         if hint then
+            return hint:gsub('^"', ""):gsub('"$', "")
+         end
+      end
+   end
+
+   return nil
 end
 
 --- Check if LuaSnip supports nested placeholders
 --- @return boolean True if nested placeholders are supported
 local function supports_nested_placeholders()
-  -- Cache the result since it won't change during a session
-  if config.nested_placeholders_supported ~= nil then
-    return config.nested_placeholders_supported
-  end
+   if config.nested_placeholders_supported ~= nil then
+      return config.nested_placeholders_supported
+   end
 
-  -- Check if LuaSnip is available
-  local ok, luasnip = pcall(require, 'luasnip')
-  if not ok then
-    config.nested_placeholders_supported = false
-    return false
-  end
+   local ok, _ = pcall(require, "luasnip")
+   if not ok then
+      config.nested_placeholders_supported = false
+      return false
+   end
 
-  -- Assume nested placeholders are supported if LuaSnip is loaded
-  -- The user's LuaSnip config should have parser_nested_assembler set up
-  config.nested_placeholders_supported = true
-  return true
+   -- Requires parser_nested_assembler in LuaSnip config
+   config.nested_placeholders_supported = true
+   return true
 end
 
 --- Convert argument hint to LSP snippet format with nested tab stops
 --- @param hint string Argument hint text like "PROMPT [--option VALUE]"
 --- @return string LSP snippet with tab stops (supports nesting if LuaSnip configured)
 local function hint_to_snippet(hint)
-  -- Split on whitespace, but keep bracketed content together
-  local tokens = {}
-  local current_token = ""
-  local in_brackets = false
+   local tokens = {}
+   local current_token = ""
+   local in_brackets = false
 
-  for i = 1, #hint do
-    local char = hint:sub(i, i)
+   for i = 1, #hint do
+      local char = hint:sub(i, i)
 
-    if char == "[" then
-      in_brackets = true
-      current_token = current_token .. char
-    elseif char == "]" then
-      in_brackets = false
-      current_token = current_token .. char
-    elseif char:match("%s") and not in_brackets then
-      -- Whitespace outside brackets - end current token
-      if #current_token > 0 then
-        table.insert(tokens, current_token)
-        current_token = ""
-      end
-    else
-      current_token = current_token .. char
-    end
-  end
-
-  -- Add final token
-  if #current_token > 0 then
-    table.insert(tokens, current_token)
-  end
-
-  -- Convert tokens to snippets
-  local snippet_parts = {}
-  local tab_index = 1
-  local use_nested = supports_nested_placeholders()
-
-  for _, token in ipairs(tokens) do
-    if token:match("^%[.+%]$") then
-      -- Optional argument in brackets
-      local inner = token:sub(2, -2) -- Remove [ and ]
-
-      if use_nested then
-        -- Check if it's a flag with value pattern: --flag VALUE
-        local flag, value = inner:match("^(%-%-[%w%-]+)%s+([^%s]+)$")
-
-        if flag and value then
-          -- Create nested snippet: ${N:--flag ${N+1:VALUE}}
-          -- Tab once: selects whole "--flag VALUE" (backspace to delete)
-          -- Tab twice: selects just "VALUE" (type to replace)
-          local snippet = string.format("${%d:%s ${%d:%s}}", tab_index, flag, tab_index + 1, value)
-          table.insert(snippet_parts, snippet)
-          tab_index = tab_index + 2
-        else
-          -- Simple optional flag (e.g., [--auto-fix])
-          local snippet = string.format("${%d:%s}", tab_index, inner)
-          table.insert(snippet_parts, snippet)
-          tab_index = tab_index + 1
-        end
+      if char == "[" then
+         in_brackets = true
+         current_token = current_token .. char
+      elseif char == "]" then
+         in_brackets = false
+         current_token = current_token .. char
+      elseif char:match "%s" and not in_brackets then
+         if #current_token > 0 then
+            table.insert(tokens, current_token)
+            current_token = ""
+         end
       else
-        -- LuaSnip not available or not configured - use simple placeholders
-        local snippet = string.format("${%d:%s}", tab_index, inner)
-        table.insert(snippet_parts, snippet)
-        tab_index = tab_index + 1
+         current_token = current_token .. char
       end
-    else
-      -- Required argument (no brackets)
-      local snippet = string.format("${%d:%s}", tab_index, token)
-      table.insert(snippet_parts, snippet)
-      tab_index = tab_index + 1
-    end
-  end
+   end
 
-  return table.concat(snippet_parts, " ")
+   if #current_token > 0 then
+      table.insert(tokens, current_token)
+   end
+
+   local snippet_parts = {}
+   local tab_index = 1
+   local use_nested = supports_nested_placeholders()
+
+   for _, token in ipairs(tokens) do
+      if token:match "^%[.+%]$" then
+         local inner = token:sub(2, -2)
+
+         if use_nested then
+            -- Pattern: --flag VALUE creates ${N:--flag ${N+1:VALUE}} for two-level navigation
+            local flag, value = inner:match "^(%-%-[%w%-]+)%s+([^%s]+)$"
+
+            if flag and value then
+               local snippet = string.format("${%d:%s ${%d:%s}}", tab_index, flag, tab_index + 1, value)
+               table.insert(snippet_parts, snippet)
+               tab_index = tab_index + 2
+            else
+               local snippet = string.format("${%d:%s}", tab_index, inner)
+               table.insert(snippet_parts, snippet)
+               tab_index = tab_index + 1
+            end
+         else
+            -- LuaSnip unavailable - simple sequential placeholders
+            local snippet = string.format("${%d:%s}", tab_index, inner)
+            table.insert(snippet_parts, snippet)
+            tab_index = tab_index + 1
+         end
+      else
+         local snippet = string.format("${%d:%s}", tab_index, token)
+         table.insert(snippet_parts, snippet)
+         tab_index = tab_index + 1
+      end
+   end
+
+   return table.concat(snippet_parts, " ")
 end
 
 --- Extract first non-empty content line after frontmatter
 --- @param lines string[] File lines
 --- @return string|nil First content line or nil
 local function extract_first_content_line(lines)
-  local start_line = skip_frontmatter(lines)
+   local start_line = skip_frontmatter(lines)
 
-  for i = start_line, #lines do
-    local trimmed = lines[i]:match("^%s*(.-)%s*$")
-    if trimmed and #trimmed > 0 and not trimmed:match("^#") then
-      return trimmed
-    end
-  end
+   for i = start_line, #lines do
+      local trimmed = lines[i]:match "^%s*(.-)%s*$"
+      if trimmed and #trimmed > 0 and not trimmed:match "^#" then
+         return trimmed
+      end
+   end
 
-  return nil
+   return nil
 end
 
 --- Extract description and argument hint from file
@@ -232,21 +219,21 @@ end
 --- @return string|nil description Description text or nil
 --- @return string|nil argument_hint Argument hint or nil
 local function extract_metadata(file_path, item_type)
-  local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
-  if not ok or not lines then
-    return nil, nil
-  end
+   local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
+   if not ok or not lines then
+      return nil, nil
+   end
 
-  -- Extract both description and hint
-  local desc = parse_yaml_description(lines)
-  local hint = parse_yaml_argument_hint(lines)
+   -- Extract both description and hint
+   local desc = parse_yaml_description(lines)
+   local hint = parse_yaml_argument_hint(lines)
 
-  -- Fallback description for commands
-  if not desc and item_type == "command" then
-    desc = extract_first_content_line(lines)
-  end
+   -- Fallback description for commands
+   if not desc and item_type == "command" then
+      desc = extract_first_content_line(lines)
+   end
 
-  return desc, hint
+   return desc, hint
 end
 
 --- Create a completion item
@@ -259,208 +246,196 @@ end
 --- @param argument_hint string|nil Optional argument hint for snippets
 --- @return blink.cmp.CompletionItem
 local function create_completion_item(name, description, file_path, item_type, scope, plugin_info, argument_hint)
-  local label, insertText, insertTextFormat, source_suffix
+   local label, insertText, insertTextFormat, source_suffix
 
-  if plugin_info then
-    -- Plugin item: /plugin:name format
-    label = "/" .. plugin_info.name .. ":" .. name
-    source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
+   if plugin_info then
+      label = "/" .. plugin_info.name .. ":" .. name
+      source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
 
-    -- With argument hint: use snippet format
-    if argument_hint and #argument_hint > 0 then
-      insertText = plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-    else
-      insertText = plugin_info.name .. ":" .. name
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-    end
-  else
-    -- Core item: /name format
-    label = "/" .. name
-    source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
+      if argument_hint and #argument_hint > 0 then
+         insertText = plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
+         insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
+      else
+         insertText = plugin_info.name .. ":" .. name
+         insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
+      end
+   else
+      label = "/" .. name
+      source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
 
-    -- With argument hint: use snippet format
-    if argument_hint and #argument_hint > 0 then
-      insertText = name .. " " .. hint_to_snippet(argument_hint)
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-    else
-      insertText = name
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-    end
-  end
+      if argument_hint and #argument_hint > 0 then
+         insertText = name .. " " .. hint_to_snippet(argument_hint)
+         insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
+      else
+         insertText = name
+         insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
+      end
+   end
 
-  -- Truncate hint for display (keep full hint for documentation)
-  local detail = nil
-  if argument_hint and #argument_hint > 0 then
-    if #argument_hint > 50 then
-      detail = argument_hint:sub(1, 47) .. "..."
-    else
-      detail = argument_hint
-    end
-  end
+   local doc_value = description and (description .. source_suffix)
+      or ("Claude " .. item_type .. ": " .. name .. source_suffix)
 
-  local doc_value = description
-    and (description .. source_suffix)
-    or ('Claude ' .. item_type .. ': ' .. name .. source_suffix)
+   if argument_hint and #argument_hint > 0 then
+      doc_value = doc_value .. "\n\n**Usage:** `" .. argument_hint .. "`"
+   end
 
-  local data = {
-    source = "claude",
-    file = file_path,
-    type = item_type,
-    scope = scope,
-  }
+   local data = {
+      source = "claude",
+      file = file_path,
+      type = item_type,
+      scope = scope,
+   }
 
-  if plugin_info then
-    data.plugin = plugin_info.name
-    data.plugin_source = plugin_info.source
-  end
+   if plugin_info then
+      data.plugin = plugin_info.name
+      data.plugin_source = plugin_info.source
+   end
 
-  return {
-    label = label,
-    kind = 23, -- CompletionItemKind.Event (󰉁 icon)
-    insertTextFormat = insertTextFormat, -- Dynamic: PlainText or Snippet
-    insertText = insertText, -- Insert without leading /
-    labelDetails = {
-      detail = detail, -- Show truncated hint in menu
-      description = "Claude",
-    },
-    documentation = {
-      kind = 'markdown',
-      value = doc_value,
-    },
-    data = data,
-  }
+   return {
+      label = label,
+      kind = vim.lsp.protocol.CompletionItemKind.Snippet,
+      insertTextFormat = insertTextFormat,
+      insertText = insertText,
+      labelDetails = {
+         description = "Claude",
+      },
+      documentation = {
+         kind = "markdown",
+         value = doc_value,
+      },
+      data = data,
+   }
 end
 
 --- Walk up the directory tree and find all .claude directories
 --- Always includes ~/.claude first
 --- @return string[] List of .claude directory paths found (from cwd up to /)
 local function find_claude_directories()
-  local claude_dirs = {}
-  local home = get_home_dir()
-  local cwd = vim.fn.getcwd()
-  local current = cwd
-  local home_claude = home .. "/.claude"
+   local claude_dirs = {}
+   local home = get_home_dir()
+   local cwd = vim.fn.getcwd()
+   local current = cwd
+   local home_claude = home .. "/.claude"
 
-  -- Always include ~/.claude first
-  local stat = vim.uv.fs_stat(home_claude)
-  if stat and stat.type == "directory" then
-    table.insert(claude_dirs, home_claude)
-  end
+   -- Always include ~/.claude first
+   local stat = vim.uv.fs_stat(home_claude)
+   if stat and stat.type == "directory" then
+      table.insert(claude_dirs, home_claude)
+   end
 
-  -- Walk up from cwd to root
-  while true do
-    local claude_path = current .. "/.claude"
-    local path_stat = vim.uv.fs_stat(claude_path)
+   -- Walk up from cwd to root
+   while true do
+      local claude_path = current .. "/.claude"
+      local path_stat = vim.uv.fs_stat(claude_path)
 
-    -- Add if it exists and is not already added (avoid duplicate ~/.claude)
-    if path_stat and path_stat.type == "directory" and claude_path ~= home_claude then
-      table.insert(claude_dirs, claude_path)
-    end
+      -- Add if it exists and is not already added (avoid duplicate ~/.claude)
+      if path_stat and path_stat.type == "directory" and claude_path ~= home_claude then
+         table.insert(claude_dirs, claude_path)
+      end
 
-    -- Check if we've reached the root
-    if current == "/" then
-      break
-    end
+      -- Check if we've reached the root
+      if current == "/" then
+         break
+      end
 
-    -- Move up one directory
-    local parent = vim.fn.fnamemodify(current, ":h")
-    if parent == current then
-      -- Can't go up anymore
-      break
-    end
-    current = parent
-  end
+      -- Move up one directory
+      local parent = vim.fn.fnamemodify(current, ":h")
+      if parent == current then
+         -- Can't go up anymore
+         break
+      end
+      current = parent
+   end
 
-  return claude_dirs
+   return claude_dirs
 end
 
 --- Parse installed plugins from JSON file
 --- @param cwd string Current working directory for project matching
 --- @return table<string, {path: string, source: string}> Map of plugin_name -> {path, source}
 local function parse_installed_plugins(cwd)
-  local plugins = {}
-  local home = get_home_dir()
-  local json_path = home .. "/.claude/plugins/installed_plugins.json"
+   local plugins = {}
+   local home = get_home_dir()
+   local json_path = home .. "/.claude/plugins/installed_plugins.json"
 
-  -- Check if file exists
-  local stat = vim.uv.fs_stat(json_path)
-  if not stat then
-    return plugins
-  end
+   -- Check if file exists
+   local stat = vim.uv.fs_stat(json_path)
+   if not stat then
+      return plugins
+   end
 
-  -- Read and parse JSON
-  local ok, content = pcall(vim.fn.readfile, json_path)
-  if not ok then
-    return plugins
-  end
+   -- Read and parse JSON
+   local ok, content = pcall(vim.fn.readfile, json_path)
+   if not ok then
+      return plugins
+   end
 
-  local json_str = table.concat(content, "\n")
-  local data
-  ok, data = pcall(vim.json.decode, json_str)
-  if not ok or not data or not data.plugins then
-    return plugins
-  end
+   local json_str = table.concat(content, "\n")
+   local data
+   ok, data = pcall(vim.json.decode, json_str)
+   if not ok or not data or not data.plugins then
+      return plugins
+   end
 
-  -- Normalize cwd for comparison
-  local normalized_cwd = cwd:gsub("/$", "")
+   -- Normalize cwd for comparison
+   local normalized_cwd = cwd:gsub("/$", "")
 
-  -- Extract plugin names and install paths
-  for plugin_key, installations in pairs(data.plugins) do
-    -- Extract plugin name and source from "plugin-name@source" format
-    local plugin_name, plugin_source = plugin_key:match("^([^@]+)@(.+)$")
-    if not plugin_name then
-      plugin_name = plugin_key
-      plugin_source = "unknown"
-    end
-
-    -- Use the first installation and check scope
-    if plugin_name and installations[1] and installations[1].installPath then
-      local install = installations[1]
-      local scope = install.scope or "user"
-
-      -- Include user-scoped plugins always
-      if scope == "user" then
-        plugins[plugin_name] = { path = install.installPath, source = plugin_source }
-      -- Include project-scoped plugins if projectPath is cwd or any parent of cwd
-      elseif scope == "project" and install.projectPath then
-        local normalized_project = install.projectPath:gsub("/$", "")
-
-        -- Check if cwd is within or equal to the project path (using string prefix, not pattern)
-        local is_in_project = normalized_cwd == normalized_project
-          or normalized_cwd:sub(1, #normalized_project + 1) == normalized_project .. "/"
-
-        if is_in_project then
-          -- Check if install path exists, if not try to find actual version directory
-          local install_stat = vim.uv.fs_stat(install.installPath)
-          local final_path = nil
-
-          if install_stat then
-            final_path = install.installPath
-          else
-            -- installPath might have "unknown" version, try to find actual directory
-            local parent_dir = install.installPath:match("^(.+)/[^/]+$")
-            if parent_dir then
-              local versions = vim.fn.glob(parent_dir .. "/*", false, true)
-              for _, version_dir in ipairs(versions) do
-                local version_stat = vim.uv.fs_stat(version_dir)
-                if version_stat and version_stat.type == "directory" then
-                  final_path = version_dir
-                  break
-                end
-              end
-            end
-          end
-
-          if final_path then
-            plugins[plugin_name] = { path = final_path, source = plugin_source }
-          end
-        end
+   -- Extract plugin names and install paths
+   for plugin_key, installations in pairs(data.plugins) do
+      -- Extract plugin name and source from "plugin-name@source" format
+      local plugin_name, plugin_source = plugin_key:match "^([^@]+)@(.+)$"
+      if not plugin_name then
+         plugin_name = plugin_key
+         plugin_source = "unknown"
       end
-    end
-  end
 
-  return plugins
+      -- Use the first installation and check scope
+      if plugin_name and installations[1] and installations[1].installPath then
+         local install = installations[1]
+         local scope = install.scope or "user"
+
+         -- Include user-scoped plugins always
+         if scope == "user" then
+            plugins[plugin_name] = { path = install.installPath, source = plugin_source }
+         -- Include project-scoped plugins if projectPath is cwd or any parent of cwd
+         elseif scope == "project" and install.projectPath then
+            local normalized_project = install.projectPath:gsub("/$", "")
+
+            -- Check if cwd is within or equal to the project path (using string prefix, not pattern)
+            local is_in_project = normalized_cwd == normalized_project
+               or normalized_cwd:sub(1, #normalized_project + 1) == normalized_project .. "/"
+
+            if is_in_project then
+               -- Check if install path exists, if not try to find actual version directory
+               local install_stat = vim.uv.fs_stat(install.installPath)
+               local final_path = nil
+
+               if install_stat then
+                  final_path = install.installPath
+               else
+                  -- installPath might have "unknown" version, try to find actual directory
+                  local parent_dir = install.installPath:match "^(.+)/[^/]+$"
+                  if parent_dir then
+                     local versions = vim.fn.glob(parent_dir .. "/*", false, true)
+                     for _, version_dir in ipairs(versions) do
+                        local version_stat = vim.uv.fs_stat(version_dir)
+                        if version_stat and version_stat.type == "directory" then
+                           final_path = version_dir
+                           break
+                        end
+                     end
+                  end
+               end
+
+               if final_path then
+                  plugins[plugin_name] = { path = final_path, source = plugin_source }
+               end
+            end
+         end
+      end
+   end
+
+   return plugins
 end
 
 --- Extract command/skill name from file path
@@ -468,105 +443,114 @@ end
 --- @param item_type string Either "skill" or "command"
 --- @return string|nil Name extracted from path, or nil if extraction failed
 local function extract_completion_name(file_path, item_type)
-  if item_type == "skill" then
-    -- For SKILL.md: use parent directory name
-    -- Example: /path/skills/unslop-code/SKILL.md -> "unslop-code"
-    local skill_name = file_path:match("/([^/]+)/SKILL%.md$")
-    return skill_name
-  else
-    -- For command *.md: use filename without extension
-    -- Example: /path/commands/commit.md -> "commit"
-    local cmd_name = file_path:match("/([^/]+)%.md$")
-    -- Exclude SKILL.md files that might be matched by glob
-    if cmd_name and cmd_name ~= "SKILL" then
-      return cmd_name
-    end
-  end
+   if item_type == "skill" then
+      -- For SKILL.md: use parent directory name
+      -- Example: /path/skills/unslop-code/SKILL.md -> "unslop-code"
+      local skill_name = file_path:match "/([^/]+)/SKILL%.md$"
+      return skill_name
+   else
+      -- For command *.md: use filename without extension
+      -- Example: /path/commands/commit.md -> "commit"
+      local cmd_name = file_path:match "/([^/]+)%.md$"
+      -- Exclude SKILL.md files that might be matched by glob
+      if cmd_name and cmd_name ~= "SKILL" then
+         return cmd_name
+      end
+   end
 
-  return nil
+   return nil
 end
 
 --- Scan all Claude directories and extract completion items
 --- @param bufnr number|nil Buffer number (unused now, kept for compatibility)
 --- @return blink.cmp.CompletionItem[]
 local function scan_skills_and_commands(bufnr)
-  local items = {}
-  local seen = {} -- Track labels to avoid duplicates
-  local home = get_home_dir()
-  local cwd = vim.fn.getcwd()
-  local home_claude = home .. "/.claude"
+   local items = {}
+   local seen = {} -- Track labels to avoid duplicates
+   local home = get_home_dir()
+   local cwd = vim.fn.getcwd()
+   local home_claude = home .. "/.claude"
 
-  -- Walk up directory tree and scan all .claude directories found
-  local claude_dirs = find_claude_directories()
+   -- Walk up directory tree and scan all .claude directories found
+   local claude_dirs = find_claude_directories()
 
-  for _, claude_dir in ipairs(claude_dirs) do
-    -- Determine scope: "user" for ~/.claude, "project" for everything else
-    local scope = (claude_dir == home_claude) and "user" or "project"
+   for _, claude_dir in ipairs(claude_dirs) do
+      -- Determine scope: "user" for ~/.claude, "project" for everything else
+      local scope = (claude_dir == home_claude) and "user" or "project"
 
-    local dir_configs = {
-      { pattern = claude_dir .. "/skills/*/SKILL.md", type = "skill", scope = scope },
-      { pattern = claude_dir .. "/commands/*.md", type = "command", scope = scope },
-    }
+      local dir_configs = {
+         { pattern = claude_dir .. "/skills/*/SKILL.md", type = "skill", scope = scope },
+         { pattern = claude_dir .. "/commands/*.md", type = "command", scope = scope },
+      }
 
-    for _, config in ipairs(dir_configs) do
-      local files = vim.fn.glob(config.pattern, false, true)
+      for _, config in ipairs(dir_configs) do
+         local files = vim.fn.glob(config.pattern, false, true)
 
-      for _, file_path in ipairs(files) do
-        local name = extract_completion_name(file_path, config.type)
-        if name then
-          local label = "/" .. name
+         for _, file_path in ipairs(files) do
+            local name = extract_completion_name(file_path, config.type)
+            if name then
+               local label = "/" .. name
 
-          -- Skip if we've already seen this label (avoid duplicates from symlinks)
-          if not seen[label] then
-            seen[label] = true
+               -- Skip if we've already seen this label (avoid duplicates from symlinks)
+               if not seen[label] then
+                  seen[label] = true
 
-            local description, argument_hint = extract_metadata(file_path, config.type)
-            local item = create_completion_item(name, description, file_path, config.type, config.scope, nil, argument_hint)
-            table.insert(items, item)
-          end
-        end
+                  local description, argument_hint = extract_metadata(file_path, config.type)
+                  local item =
+                     create_completion_item(name, description, file_path, config.type, config.scope, nil, argument_hint)
+                  table.insert(items, item)
+               end
+            end
+         end
       end
-    end
-  end
+   end
 
-  -- Scan plugin skills and commands (with plugin: prefix)
-  local plugins = parse_installed_plugins(cwd)
+   -- Scan plugin skills and commands (with plugin: prefix)
+   local plugins = parse_installed_plugins(cwd)
 
-  for plugin_name, plugin_info in pairs(plugins) do
-    local plugin_configs = {
-      { pattern = plugin_info.path .. "/commands/*.md", type = "command" },
-      { pattern = plugin_info.path .. "/skills/*/SKILL.md", type = "skill" },
-    }
+   for plugin_name, plugin_info in pairs(plugins) do
+      local plugin_configs = {
+         { pattern = plugin_info.path .. "/commands/*.md", type = "command" },
+         { pattern = plugin_info.path .. "/skills/*/SKILL.md", type = "skill" },
+      }
 
-    for _, config in ipairs(plugin_configs) do
-      local files = vim.fn.glob(config.pattern, false, true)
+      for _, config in ipairs(plugin_configs) do
+         local files = vim.fn.glob(config.pattern, false, true)
 
-      for _, file_path in ipairs(files) do
-        local name = extract_completion_name(file_path, config.type)
-        if name then
-          local label = "/" .. plugin_name .. ":" .. name
+         for _, file_path in ipairs(files) do
+            local name = extract_completion_name(file_path, config.type)
+            if name then
+               local label = "/" .. plugin_name .. ":" .. name
 
-          -- Skip if we've already seen this label
-          if not seen[label] then
-            seen[label] = true
+               -- Skip if we've already seen this label
+               if not seen[label] then
+                  seen[label] = true
 
-            local description, argument_hint = extract_metadata(file_path, config.type)
-            local plugin_data = { name = plugin_name, source = plugin_info.source }
-            -- Plugin items always have "user" scope (from plugin installation)
-            local item = create_completion_item(name, description, file_path, config.type, "user", plugin_data, argument_hint)
-            table.insert(items, item)
-          end
-        end
+                  local description, argument_hint = extract_metadata(file_path, config.type)
+                  local plugin_data = { name = plugin_name, source = plugin_info.source }
+                  -- Plugin items always have "user" scope (from plugin installation)
+                  local item = create_completion_item(
+                     name,
+                     description,
+                     file_path,
+                     config.type,
+                     "user",
+                     plugin_data,
+                     argument_hint
+                  )
+                  table.insert(items, item)
+               end
+            end
+         end
       end
-    end
-  end
+   end
 
-  -- Sort alphabetically by label
-  table.sort(items, function(a, b)
-    return a.label < b.label
-  end)
+   -- Sort alphabetically by label
+   table.sort(items, function(a, b)
+      return a.label < b.label
+   end)
 
-  return items
+   return items
 end
 
 -- ============================================================================
@@ -575,51 +559,48 @@ end
 
 --- Session-scoped cache for completion items
 local cache = {
-  items = nil,           -- Cached completion items
-  initialized = false,   -- Whether cache has been populated
+   items = nil, -- Cached completion items
+   initialized = false, -- Whether cache has been populated
 }
 
 --- Check if cache should be initialized for the given buffer
 --- @param bufnr number Buffer number
 --- @return boolean True if this is a claude-prompt markdown buffer and cache not initialized
 local function should_initialize_cache(bufnr)
-  if cache.initialized then
-    return false
-  end
+   if cache.initialized then
+      return false
+   end
 
-  -- Check filetype
-  if vim.bo[bufnr].filetype ~= "markdown" then
-    return false
-  end
+   -- Check filetype
+   if vim.bo[bufnr].filetype ~= "markdown" then
+      return false
+   end
 
-  -- Check filename pattern
-  local filename = vim.api.nvim_buf_get_name(bufnr)
-  local basename = vim.fn.fnamemodify(filename, ":t")
+   -- Check filename pattern
+   local filename = vim.api.nvim_buf_get_name(bufnr)
+   local basename = vim.fn.fnamemodify(filename, ":t")
 
-  return basename:match("^claude%-prompt") ~= nil
+   return basename:match "^claude%-prompt" ~= nil
 end
 
 --- Get cached completion items, loading them if necessary
 --- @param bufnr number Buffer number (for detecting /tmp and repo context)
 --- @return blink.cmp.CompletionItem[] Completion items (may be empty on error)
 local function get_cached_items(bufnr)
-  if not cache.items then
-    -- Attempt to scan and cache, with error handling
-    local ok, items_or_err = pcall(scan_skills_and_commands, bufnr)
-    if ok then
-      cache.items = items_or_err
-      cache.initialized = true
-    else
-      -- Log error for debugging, then fallback
-      vim.notify(
-        "blink-claude: Error scanning files: " .. tostring(items_or_err),
-        vim.log.levels.WARN
-      )
-      cache.items = {}
-      cache.initialized = true
-    end
-  end
-  return cache.items
+   if not cache.items then
+      -- Attempt to scan and cache, with error handling
+      local ok, items_or_err = pcall(scan_skills_and_commands, bufnr)
+      if ok then
+         cache.items = items_or_err
+         cache.initialized = true
+      else
+         -- Log error for debugging, then fallback
+         vim.notify("blink-claude: Error scanning files: " .. tostring(items_or_err), vim.log.levels.WARN)
+         cache.items = {}
+         cache.initialized = true
+      end
+   end
+   return cache.items
 end
 
 -- ============================================================================
@@ -631,110 +612,110 @@ end
 --- @param bufnr number Buffer number
 --- @return boolean True if completions should be shown
 local function should_show_completions(ctx, bufnr)
-  -- Check filetype
-  if vim.bo[bufnr].filetype ~= "markdown" then
-    return false
-  end
+   -- Check filetype
+   if vim.bo[bufnr].filetype ~= "markdown" then
+      return false
+   end
 
-  -- Check filename pattern
-  local filename = vim.api.nvim_buf_get_name(bufnr)
-  local basename = vim.fn.fnamemodify(filename, ":t")
+   -- Check filename pattern
+   local filename = vim.api.nvim_buf_get_name(bufnr)
+   local basename = vim.fn.fnamemodify(filename, ":t")
 
-  if not basename:match("^claude%-prompt") then
-    return false
-  end
+   if not basename:match "^claude%-prompt" then
+      return false
+   end
 
-  -- Check if cursor is positioned after / that starts a word
-  local line = ctx.line
-  local col = ctx.cursor[2]
+   -- Check if cursor is positioned after / that starts a word
+   local line = ctx.line
+   local col = ctx.cursor[2]
 
-  -- Check if we just typed / or are in the middle of completing after /
-  if col > 0 then
-    local before_cursor = line:sub(1, col)
-    -- Match patterns like: "/", "/un", "/unslop"
-    -- But NOT "path/to" - the / must be at start of line or after whitespace
-    local slash_match = before_cursor:match("/%w*$")
-    if slash_match then
-      -- Find the position of the / in the line
-      local slash_pos = col - #slash_match + 1
+   -- Check if we just typed / or are in the middle of completing after /
+   if col > 0 then
+      local before_cursor = line:sub(1, col)
+      -- Match patterns like: "/", "/un", "/unslop"
+      -- But NOT "path/to" - the / must be at start of line or after whitespace
+      local slash_match = before_cursor:match "/%w*$"
+      if slash_match then
+         -- Find the position of the / in the line
+         local slash_pos = col - #slash_match + 1
 
-      -- Check that / is either at start of line or preceded by whitespace
-      if slash_pos == 1 then
-        -- / is at start of line
-        return true
-      elseif slash_pos > 1 then
-        -- Check character before /
-        local char_before = line:sub(slash_pos - 1, slash_pos - 1)
-        if char_before:match("%s") then
-          -- / is preceded by whitespace
-          return true
-        end
+         -- Check that / is either at start of line or preceded by whitespace
+         if slash_pos == 1 then
+            -- / is at start of line
+            return true
+         elseif slash_pos > 1 then
+            -- Check character before /
+            local char_before = line:sub(slash_pos - 1, slash_pos - 1)
+            if char_before:match "%s" then
+               -- / is preceded by whitespace
+               return true
+            end
+         end
       end
-    end
-  end
+   end
 
-  return false
+   return false
 end
 
 --- Constructor for the source
 --- @param opts table|nil Options (unused for this source)
 --- @return blink.cmp.Source
 function source.new(opts)
-  local self = setmetatable({}, { __index = source })
-  return self
+   local self = setmetatable({}, { __index = source })
+   return self
 end
 
 --- Get trigger characters for this source
 --- @return string[]
 function source:get_trigger_characters()
-  return { "/" }
+   return { "/" }
 end
 
 --- Get completions for the current context
 --- @param ctx blink.cmp.Context
 --- @param callback fun(response: blink.cmp.CompletionResponse)
 function source:get_completions(ctx, callback)
-  local bufnr = vim.api.nvim_get_current_buf()
+   local bufnr = vim.api.nvim_get_current_buf()
 
-  -- Initialize cache on first claude-prompt buffer (lazy loading)
-  if should_initialize_cache(bufnr) then
-    get_cached_items(bufnr)
-  end
+   -- Initialize cache on first claude-prompt buffer (lazy loading)
+   if should_initialize_cache(bufnr) then
+      get_cached_items(bufnr)
+   end
 
-  -- Check if we should show completions in this context
-  if not should_show_completions(ctx, bufnr) then
-    callback({
+   -- Check if we should show completions in this context
+   if not should_show_completions(ctx, bufnr) then
+      callback {
+         is_incomplete_forward = false,
+         is_incomplete_backward = false,
+         items = {},
+      }
+      return
+   end
+
+   -- Return cached items
+   local items = cache.items or {}
+   callback {
       is_incomplete_forward = false,
       is_incomplete_backward = false,
-      items = {},
-    })
-    return
-  end
-
-  -- Return cached items
-  local items = cache.items or {}
-  callback({
-    is_incomplete_forward = false,
-    is_incomplete_backward = false,
-    items = items,
-  })
+      items = items,
+   }
 end
 
 --- Configure the source (for testing)
 --- @param opts table Options table with optional home_dir and nested_placeholders_supported
 function source.configure(opts)
-  if opts.home_dir then
-    config.home_dir = opts.home_dir
-  end
-  if opts.nested_placeholders_supported ~= nil then
-    config.nested_placeholders_supported = opts.nested_placeholders_supported
-  end
+   if opts.home_dir then
+      config.home_dir = opts.home_dir
+   end
+   if opts.nested_placeholders_supported ~= nil then
+      config.nested_placeholders_supported = opts.nested_placeholders_supported
+   end
 end
 
 --- Reset cache (for testing)
 function source.reset_cache()
-  cache.items = nil
-  cache.initialized = false
+   cache.items = nil
+   cache.initialized = false
 end
 
 return source
