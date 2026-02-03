@@ -70,8 +70,15 @@ return {
          },
 
          sources = {
-            default = { "lsp", "path", "snippets", "buffer" },
-            providers = {},
+            default = { "lsp", "path", "snippets", "buffer", "claude" },
+            providers = {
+               -- Claude skills/commands completion for claude-prompt* files
+               claude = {
+                  name = "Claude",
+                  module = "local_plugins.blink-claude",
+                  score_offset = 10, -- Prioritize over buffer completions
+               },
+            },
          },
 
          snippets = {
