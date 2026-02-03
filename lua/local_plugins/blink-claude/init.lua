@@ -17,6 +17,80 @@ local source = {}
 -- Section 1: File Scanner Module (Pure Functions)
 -- ============================================================================
 
+--- Skip YAML frontmatter and return the line number after it
+--- @param lines string[] File lines
+--- @return number Line number after frontmatter (1-indexed), or 1 if no frontmatter
+local function skip_frontmatter(lines)
+  if not lines[1] or lines[1] ~= "---" then
+    return 1
+  end
+
+  for i = 2, #lines do
+    if lines[i] == "---" then
+      return i + 1
+    end
+  end
+
+  return 1 -- Malformed frontmatter
+end
+
+--- Extract description from YAML frontmatter
+--- @param lines string[] File lines
+--- @return string|nil Description or nil
+local function parse_yaml_description(lines)
+  if not lines[1] or lines[1] ~= "---" then
+    return nil
+  end
+
+  local in_description = false
+  local description_parts = {}
+
+  for i = 2, #lines do
+    local line = lines[i]
+
+    if line == "---" then
+      break
+    end
+
+    if line:match("^description:%s*(.*)$") then
+      local inline_desc = line:match("^description:%s*(.+)$")
+      if inline_desc then
+        return inline_desc:gsub('^"', ''):gsub('"$', '')
+      end
+      in_description = true
+    elseif in_description then
+      if line:match("^%w+:") then
+        break
+      elseif line:match("^%s+(.+)$") then
+        local content = line:match("^%s+(.+)$")
+        table.insert(description_parts, content)
+      end
+    end
+  end
+
+  if #description_parts > 0 then
+    return table.concat(description_parts, " ")
+  end
+
+  return nil
+end
+
+--- Extract first non-empty content line after frontmatter
+--- @param lines string[] File lines
+--- @return string|nil First content line or nil
+local function extract_first_content_line(lines)
+  local start_line = skip_frontmatter(lines)
+
+  for i = start_line, #lines do
+    local trimmed = lines[i]:match("^%s*(.-)%s*$")
+    if trimmed and #trimmed > 0 and not trimmed:match("^#") then
+      return trimmed
+    end
+  end
+
+  return nil
+end
+
 --- Extract description from a skill or command file
 --- @param file_path string Path to the .md file
 --- @param item_type string Either "skill" or "command"
@@ -27,69 +101,73 @@ local function extract_description(file_path, item_type)
     return nil
   end
 
-  -- Check if file has YAML frontmatter
-  local has_frontmatter = lines[1] == "---"
-
-  if has_frontmatter then
-    -- Parse YAML frontmatter for description
-    local in_frontmatter = false
-    local in_description = false
-    local description_parts = {}
-
-    for i, line in ipairs(lines) do
-      if i == 1 then
-        in_frontmatter = true
-      elseif line == "---" then
-        -- End of frontmatter
-        break
-      elseif in_frontmatter then
-        if line:match("^description:%s*(.*)$") then
-          -- Start of description field
-          local inline_desc = line:match("^description:%s*(.+)$")
-          if inline_desc then
-            -- Single-line description (may be quoted)
-            return inline_desc:gsub('^"', ''):gsub('"$', '')
-          else
-            -- Multi-line description
-            in_description = true
-          end
-        elseif in_description then
-          if line:match("^%w+:") then
-            -- Next YAML field, end of description
-            break
-          elseif line:match("^%s+(.+)$") then
-            -- Indented line is part of description
-            local content = line:match("^%s+(.+)$")
-            table.insert(description_parts, content)
-          end
-        end
-      end
-    end
-
-    if #description_parts > 0 then
-      return table.concat(description_parts, " ")
-    end
+  -- Try frontmatter description first
+  local desc = parse_yaml_description(lines)
+  if desc then
+    return desc
   end
 
-  -- Fallback for commands without frontmatter or without description
+  -- Fallback to first content line for commands
   if item_type == "command" then
-    local skip_frontmatter = has_frontmatter
-    for _, line in ipairs(lines) do
-      if skip_frontmatter then
-        if line == "---" then
-          skip_frontmatter = false
-        end
-      else
-        local trimmed = line:match("^%s*(.-)%s*$")
-        if trimmed and #trimmed > 0 and not trimmed:match("^#") then
-          -- Return first non-empty, non-heading line
-          return trimmed
-        end
-      end
-    end
+    return extract_first_content_line(lines)
   end
 
   return nil
+end
+
+--- Create a completion item
+--- @param name string The skill/command name
+--- @param description string|nil Optional description
+--- @param file_path string Path to the source file
+--- @param item_type string Either "skill" or "command"
+--- @param scope string Either "user" or "project"
+--- @param plugin_info table|nil Optional {name: string, source: string} for plugin items
+--- @return blink.cmp.CompletionItem
+local function create_completion_item(name, description, file_path, item_type, scope, plugin_info)
+  local label, insertText, source_suffix
+
+  if plugin_info then
+    -- Plugin item: /plugin:name format
+    label = "/" .. plugin_info.name .. ":" .. name
+    insertText = plugin_info.name .. ":" .. name
+    source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
+  else
+    -- Core item: /name format
+    label = "/" .. name
+    insertText = name
+    source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
+  end
+
+  local doc_value = description
+    and (description .. source_suffix)
+    or ('Claude ' .. item_type .. ': ' .. name .. source_suffix)
+
+  local data = {
+    source = "claude",
+    file = file_path,
+    type = item_type,
+    scope = scope,
+  }
+
+  if plugin_info then
+    data.plugin = plugin_info.name
+    data.plugin_source = plugin_info.source
+  end
+
+  return {
+    label = label,
+    kind = 23, -- CompletionItemKind.Event (󰉁 icon)
+    insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText,
+    insertText = insertText, -- Insert without leading /
+    labelDetails = {
+      description = "Claude",
+    },
+    documentation = {
+      kind = 'markdown',
+      value = doc_value,
+    },
+    data = data,
+  }
 end
 
 --- Walk up the directory tree and find all .claude directories
@@ -176,8 +254,11 @@ local function parse_installed_plugins(cwd)
       elseif scope == "project" and install.projectPath then
         local normalized_project = install.projectPath:gsub("/$", "")
 
-        -- Check if cwd is within or equal to the project path
-        if normalized_cwd == normalized_project or normalized_cwd:match("^" .. normalized_project .. "/") then
+        -- Check if cwd is within or equal to the project path (using string prefix, not pattern)
+        local is_in_project = normalized_cwd == normalized_project
+          or normalized_cwd:sub(1, #normalized_project + 1) == normalized_project .. "/"
+
+        if is_in_project then
           -- Check if install path exists, if not try to find actual version directory
           local install_stat = vim.uv.fs_stat(install.installPath)
           local final_path = nil
@@ -268,31 +349,8 @@ local function scan_skills_and_commands(bufnr)
             seen[label] = true
 
             local description = extract_description(file_path, config.type)
-            -- Append source info to description
-            local source_suffix = config.scope == "user" and "\n\n(user)" or "\n\n(project)"
-            local doc_value = description
-              and (description .. source_suffix)
-              or ('Claude ' .. config.type .. ': ' .. name .. source_suffix)
-
-            table.insert(items, {
-              label = label,
-              kind = 23, -- CompletionItemKind.Event (󰉁 icon)
-              insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText,
-              insertText = name, -- Insert without leading /
-              labelDetails = {
-                description = "Claude",
-              },
-              documentation = {
-                kind = 'markdown',
-                value = doc_value,
-              },
-              data = {
-                source = "claude",
-                file = file_path,
-                type = config.type,
-                scope = config.scope,
-              },
-            })
+            local item = create_completion_item(name, description, file_path, config.type, config.scope, nil)
+            table.insert(items, item)
           end
         end
       end
@@ -320,34 +378,11 @@ local function scan_skills_and_commands(bufnr)
           if not seen[label] then
             seen[label] = true
 
-            local insert_text = plugin_name .. ":" .. name
             local description = extract_description(file_path, config.type)
-            -- Append plugin source info
-            local source_suffix = "\n\n(plugin:" .. plugin_name .. "@" .. plugin_info.source .. ")"
-            local doc_value = description
-              and (description .. source_suffix)
-              or ('Claude ' .. config.type .. ' (' .. plugin_name .. '): ' .. name .. source_suffix)
-
-            table.insert(items, {
-              label = label,
-              kind = 23, -- CompletionItemKind.Event (󰉁 icon)
-              insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText,
-              insertText = insert_text, -- Insert without leading /
-              labelDetails = {
-                description = "Claude",
-              },
-              documentation = {
-                kind = 'markdown',
-                value = doc_value,
-              },
-              data = {
-                source = "claude",
-                file = file_path,
-                type = config.type,
-                plugin = plugin_name,
-                plugin_source = plugin_info.source,
-              },
-            })
+            local plugin_data = { name = plugin_name, source = plugin_info.source }
+            -- Plugin items always have "user" scope (from plugin installation)
+            local item = create_completion_item(name, description, file_path, config.type, "user", plugin_data)
+            table.insert(items, item)
           end
         end
       end
