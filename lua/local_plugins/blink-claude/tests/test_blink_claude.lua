@@ -635,33 +635,32 @@ function M.test_argument_hints()
         -- Should use Snippet insertTextFormat
         assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.Snippet, "Uses Snippet format")
 
-        -- Should have simple sequential tab stops (brackets removed from snippet)
-        -- Expected: with-args ${1:PROMPT} ${2:--option VALUE}
+        -- Should have nested snippet for optional arg with value
+        -- Expected: with-args ${1:PROMPT} ${2:--option ${3:VALUE}}
         assert_contains(item.insertText, "${1:PROMPT}", "Required arg as tab stop 1")
-        assert_contains(item.insertText, "${2:--option VALUE}", "Optional arg as tab stop 2 (brackets removed)")
+        assert_contains(item.insertText, "${2:--option ${3:VALUE}}", "Nested snippet for optional flag with value")
 
         break
       end
     end
     assert_true(found_with_args, "Found command with argument hint")
 
-    -- Test sequential tab stops with multiple optional args
+    -- Test nested snippets with multiple optional args
     local found_nested = false
     for _, item in ipairs(items) do
       if item.label == "/nested-args" then
         found_nested = true
 
-        -- Expected: nested-args ${1:TASK} ${2:--max-iterations N} ${3:--completion-promise TEXT} ${4:--auto-fix}
-        -- Note: All brackets removed, simple sequential tab stops
+        -- Expected: nested-args ${1:TASK} ${2:--max-iterations ${3:N}} ${4:--completion-promise ${5:TEXT}} ${6:--auto-fix}
         assert_contains(item.insertText, "${1:TASK}", "Required arg TASK")
-        assert_contains(item.insertText, "${2:--max-iterations N}", "Optional arg 1 (brackets removed)")
-        assert_contains(item.insertText, "${3:--completion-promise TEXT}", "Optional arg 2 (brackets removed)")
-        assert_contains(item.insertText, "${4:--auto-fix}", "Optional flag (brackets removed)")
+        assert_contains(item.insertText, "${2:--max-iterations ${3:N}}", "Nested snippet for --max-iterations N")
+        assert_contains(item.insertText, "${4:--completion-promise ${5:TEXT}}", "Nested snippet for --completion-promise TEXT")
+        assert_contains(item.insertText, "${6:--auto-fix}", "Simple optional flag without value")
 
         break
       end
     end
-    assert_true(found_nested, "Found command with multiple sequential tab stops")
+    assert_true(found_nested, "Found command with nested snippets")
 
     -- Test long hint truncation
     local found_long_hint = false
@@ -704,9 +703,9 @@ function M.test_argument_hints()
 
     print("  ✓ Argument hints shown in labelDetails.detail")
     print("  ✓ Snippet format used for commands with hints")
-    print("  ✓ Sequential tab stops for all arguments")
-    print("  ✓ Brackets removed from inserted text")
-    print("  ✓ Optional args deletable with backspace")
+    print("  ✓ Nested tab stops for optional args with values")
+    print("  ✓ Simple tab stops for optional flags without values")
+    print("  ✓ Custom LuaSnip config enables select mode for nested placeholders")
     print("  ✓ Long hints truncated in display")
     print("  ✓ Full hints preserved in insertText")
     print("  ✓ Backward compatible with commands without hints")
