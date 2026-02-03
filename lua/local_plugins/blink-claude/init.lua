@@ -86,6 +86,90 @@ local function parse_yaml_description(lines)
   return nil
 end
 
+--- Extract argument-hint from YAML frontmatter
+--- @param lines string[] File lines
+--- @return string|nil Argument hint or nil
+local function parse_yaml_argument_hint(lines)
+  if not lines[1] or lines[1] ~= "---" then
+    return nil
+  end
+
+  for i = 2, #lines do
+    local line = lines[i]
+    if line == "---" then
+      break
+    end
+
+    if line:match("^argument%-hint:%s*(.*)$") then
+      local hint = line:match("^argument%-hint:%s*(.+)$")
+      if hint then
+        return hint:gsub('^"', ''):gsub('"$', '')
+      end
+    end
+  end
+
+  return nil
+end
+
+--- Convert argument hint to LSP snippet format with tab stops
+--- @param hint string Argument hint text like "PROMPT [--option VALUE]"
+--- @return string LSP snippet with tab stops
+local function hint_to_snippet(hint)
+  -- Split on whitespace, but keep bracketed content together
+  local tokens = {}
+  local current_token = ""
+  local in_brackets = false
+
+  for i = 1, #hint do
+    local char = hint:sub(i, i)
+
+    if char == "[" then
+      in_brackets = true
+      current_token = current_token .. char
+    elseif char == "]" then
+      in_brackets = false
+      current_token = current_token .. char
+    elseif char:match("%s") and not in_brackets then
+      -- Whitespace outside brackets - end current token
+      if #current_token > 0 then
+        table.insert(tokens, current_token)
+        current_token = ""
+      end
+    else
+      current_token = current_token .. char
+    end
+  end
+
+  -- Add final token
+  if #current_token > 0 then
+    table.insert(tokens, current_token)
+  end
+
+  -- Convert tokens to simple sequential tab stops (no nesting - not supported by LSP)
+  local snippet_parts = {}
+  local tab_index = 1
+
+  for _, token in ipairs(tokens) do
+    if token:match("^%[.+%]$") then
+      -- Optional argument in brackets - remove brackets and create tab stop
+      local inner = token:sub(2, -2) -- Remove [ and ]
+
+      -- Create simple tab stop without brackets: ${N:inner}
+      -- User can select and delete the entire thing
+      local snippet = string.format("${%d:%s}", tab_index, inner)
+      table.insert(snippet_parts, snippet)
+      tab_index = tab_index + 1
+    else
+      -- Required argument (no brackets)
+      local snippet = string.format("${%d:%s}", tab_index, token)
+      table.insert(snippet_parts, snippet)
+      tab_index = tab_index + 1
+    end
+  end
+
+  return table.concat(snippet_parts, " ")
+end
+
 --- Extract first non-empty content line after frontmatter
 --- @param lines string[] File lines
 --- @return string|nil First content line or nil
@@ -102,28 +186,27 @@ local function extract_first_content_line(lines)
   return nil
 end
 
---- Extract description from a skill or command file
+--- Extract description and argument hint from file
 --- @param file_path string Path to the .md file
 --- @param item_type string Either "skill" or "command"
---- @return string|nil Description text or nil
-local function extract_description(file_path, item_type)
+--- @return string|nil description Description text or nil
+--- @return string|nil argument_hint Argument hint or nil
+local function extract_metadata(file_path, item_type)
   local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
   if not ok or not lines then
-    return nil
+    return nil, nil
   end
 
-  -- Try frontmatter description first
+  -- Extract both description and hint
   local desc = parse_yaml_description(lines)
-  if desc then
-    return desc
+  local hint = parse_yaml_argument_hint(lines)
+
+  -- Fallback description for commands
+  if not desc and item_type == "command" then
+    desc = extract_first_content_line(lines)
   end
 
-  -- Fallback to first content line for commands
-  if item_type == "command" then
-    return extract_first_content_line(lines)
-  end
-
-  return nil
+  return desc, hint
 end
 
 --- Create a completion item
@@ -133,20 +216,47 @@ end
 --- @param item_type string Either "skill" or "command"
 --- @param scope string Either "user" or "project"
 --- @param plugin_info table|nil Optional {name: string, source: string} for plugin items
+--- @param argument_hint string|nil Optional argument hint for snippets
 --- @return blink.cmp.CompletionItem
-local function create_completion_item(name, description, file_path, item_type, scope, plugin_info)
-  local label, insertText, source_suffix
+local function create_completion_item(name, description, file_path, item_type, scope, plugin_info, argument_hint)
+  local label, insertText, insertTextFormat, source_suffix
 
   if plugin_info then
     -- Plugin item: /plugin:name format
     label = "/" .. plugin_info.name .. ":" .. name
-    insertText = plugin_info.name .. ":" .. name
     source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
+
+    -- With argument hint: use snippet format
+    if argument_hint and #argument_hint > 0 then
+      insertText = plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
+    else
+      insertText = plugin_info.name .. ":" .. name
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
+    end
   else
     -- Core item: /name format
     label = "/" .. name
-    insertText = name
     source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
+
+    -- With argument hint: use snippet format
+    if argument_hint and #argument_hint > 0 then
+      insertText = name .. " " .. hint_to_snippet(argument_hint)
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
+    else
+      insertText = name
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
+    end
+  end
+
+  -- Truncate hint for display (keep full hint for documentation)
+  local detail = nil
+  if argument_hint and #argument_hint > 0 then
+    if #argument_hint > 50 then
+      detail = argument_hint:sub(1, 47) .. "..."
+    else
+      detail = argument_hint
+    end
   end
 
   local doc_value = description
@@ -168,9 +278,10 @@ local function create_completion_item(name, description, file_path, item_type, s
   return {
     label = label,
     kind = 23, -- CompletionItemKind.Event (󰉁 icon)
-    insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText,
+    insertTextFormat = insertTextFormat, -- Dynamic: PlainText or Snippet
     insertText = insertText, -- Insert without leading /
     labelDetails = {
+      detail = detail, -- Show truncated hint in menu
       description = "Claude",
     },
     documentation = {
@@ -369,8 +480,8 @@ local function scan_skills_and_commands(bufnr)
           if not seen[label] then
             seen[label] = true
 
-            local description = extract_description(file_path, config.type)
-            local item = create_completion_item(name, description, file_path, config.type, config.scope, nil)
+            local description, argument_hint = extract_metadata(file_path, config.type)
+            local item = create_completion_item(name, description, file_path, config.type, config.scope, nil, argument_hint)
             table.insert(items, item)
           end
         end
@@ -399,10 +510,10 @@ local function scan_skills_and_commands(bufnr)
           if not seen[label] then
             seen[label] = true
 
-            local description = extract_description(file_path, config.type)
+            local description, argument_hint = extract_metadata(file_path, config.type)
             local plugin_data = { name = plugin_name, source = plugin_info.source }
             -- Plugin items always have "user" scope (from plugin installation)
-            local item = create_completion_item(name, description, file_path, config.type, "user", plugin_data)
+            local item = create_completion_item(name, description, file_path, config.type, "user", plugin_data, argument_hint)
             table.insert(items, item)
           end
         end

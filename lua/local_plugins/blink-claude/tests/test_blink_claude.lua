@@ -61,6 +61,27 @@ local function setup_fixtures()
     "It should use the first line as description.",
   }, home_claude .. "/commands/no-frontmatter.md")
 
+  vim.fn.writefile({
+    "---",
+    "description: Command with arguments",
+    'argument-hint: "PROMPT [--option VALUE]"',
+    "---",
+  }, home_claude .. "/commands/with-args.md")
+
+  vim.fn.writefile({
+    "---",
+    "description: Command with multiple optional args for testing nested snippets",
+    'argument-hint: "TASK [--max-iterations N] [--completion-promise TEXT] [--auto-fix]"',
+    "---",
+  }, home_claude .. "/commands/nested-args.md")
+
+  vim.fn.writefile({
+    "---",
+    "description: Command with very long argument hint that should be truncated in the menu",
+    'argument-hint: "VERY_LONG_ARGUMENT_NAME [--very-long-option VERY_LONG_VALUE] [--another-option MORE_VALUES]"',
+    "---",
+  }, home_claude .. "/commands/long-hint.md")
+
   -- Create project-local skills
   vim.fn.mkdir(project_claude .. "/skills/project-skill", "p")
   vim.fn.writefile({
@@ -587,6 +608,113 @@ function M.test_caching()
   teardown_fixtures()
 end
 
+function M.test_argument_hints()
+  print("\nTest: Argument Hints")
+
+  local fixtures = setup_fixtures()
+  vim.cmd("cd " .. fixtures.home)
+
+  local source = reset_module(fixtures)
+  local bufnr = create_test_buffer()
+  local ctx = { line = "/", cursor = {1, 1}, bufnr = bufnr }
+
+  source:get_completions(ctx, function(response)
+    local items = response.items
+
+    -- Test command with simple argument hint
+    local found_with_args = false
+    for _, item in ipairs(items) do
+      if item.label == "/with-args" then
+        found_with_args = true
+
+        -- Should show hint in labelDetails.detail
+        assert_true(item.labelDetails.detail ~= nil, "Argument hint present in labelDetails.detail")
+        assert_contains(item.labelDetails.detail, "PROMPT", "Hint contains PROMPT")
+        assert_contains(item.labelDetails.detail, "[--option VALUE]", "Hint contains option")
+
+        -- Should use Snippet insertTextFormat
+        assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.Snippet, "Uses Snippet format")
+
+        -- Should have simple sequential tab stops (brackets removed from snippet)
+        -- Expected: with-args ${1:PROMPT} ${2:--option VALUE}
+        assert_contains(item.insertText, "${1:PROMPT}", "Required arg as tab stop 1")
+        assert_contains(item.insertText, "${2:--option VALUE}", "Optional arg as tab stop 2 (brackets removed)")
+
+        break
+      end
+    end
+    assert_true(found_with_args, "Found command with argument hint")
+
+    -- Test sequential tab stops with multiple optional args
+    local found_nested = false
+    for _, item in ipairs(items) do
+      if item.label == "/nested-args" then
+        found_nested = true
+
+        -- Expected: nested-args ${1:TASK} ${2:--max-iterations N} ${3:--completion-promise TEXT} ${4:--auto-fix}
+        -- Note: All brackets removed, simple sequential tab stops
+        assert_contains(item.insertText, "${1:TASK}", "Required arg TASK")
+        assert_contains(item.insertText, "${2:--max-iterations N}", "Optional arg 1 (brackets removed)")
+        assert_contains(item.insertText, "${3:--completion-promise TEXT}", "Optional arg 2 (brackets removed)")
+        assert_contains(item.insertText, "${4:--auto-fix}", "Optional flag (brackets removed)")
+
+        break
+      end
+    end
+    assert_true(found_nested, "Found command with multiple sequential tab stops")
+
+    -- Test long hint truncation
+    local found_long_hint = false
+    for _, item in ipairs(items) do
+      if item.label == "/long-hint" then
+        found_long_hint = true
+
+        -- Detail should be truncated to 50 chars
+        assert_true(#item.labelDetails.detail <= 50, "Long hint truncated in detail")
+        assert_contains(item.labelDetails.detail, "...", "Truncation indicator present")
+
+        -- InsertText should have full snippet (not truncated)
+        assert_contains(item.insertText, "VERY_LONG_ARGUMENT_NAME", "Full hint in insertText")
+        assert_contains(item.insertText, "${1:", "Tab stops in full snippet")
+
+        break
+      end
+    end
+    assert_true(found_long_hint, "Found command with long hint")
+
+    -- Test command without hint (backward compatibility)
+    local found_no_hint = false
+    for _, item in ipairs(items) do
+      if item.label == "/test-cmd" then
+        found_no_hint = true
+
+        -- Should NOT have detail
+        assert_true(item.labelDetails.detail == nil, "No hint means no detail")
+
+        -- Should use PlainText format
+        assert_eq(item.insertTextFormat, vim.lsp.protocol.InsertTextFormat.PlainText, "Uses PlainText format")
+
+        -- Should not have snippet syntax
+        assert_true(not item.insertText:match("%$%{"), "No snippet syntax in insertText")
+
+        break
+      end
+    end
+    assert_true(found_no_hint, "Found command without hint")
+
+    print("  ✓ Argument hints shown in labelDetails.detail")
+    print("  ✓ Snippet format used for commands with hints")
+    print("  ✓ Sequential tab stops for all arguments")
+    print("  ✓ Brackets removed from inserted text")
+    print("  ✓ Optional args deletable with backspace")
+    print("  ✓ Long hints truncated in display")
+    print("  ✓ Full hints preserved in insertText")
+    print("  ✓ Backward compatible with commands without hints")
+  end)
+
+  teardown_fixtures()
+end
+
 -- ============================================================================
 -- Test Runner
 -- ============================================================================
@@ -606,6 +734,7 @@ function M.run_all_tests()
     M.test_tree_walking,
     M.test_alphabetical_sorting,
     M.test_caching,
+    M.test_argument_hints,
   }
 
   local passed = 0
