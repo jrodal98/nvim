@@ -253,10 +253,10 @@ local function create_completion_item(name, description, file_path, item_type, s
       source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
 
       if argument_hint and #argument_hint > 0 then
-         insertText = plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
+         insertText = "/" .. plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
          insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
       else
-         insertText = plugin_info.name .. ":" .. name
+         insertText = "/" .. plugin_info.name .. ":" .. name
          insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
       end
    else
@@ -264,10 +264,10 @@ local function create_completion_item(name, description, file_path, item_type, s
       source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
 
       if argument_hint and #argument_hint > 0 then
-         insertText = name .. " " .. hint_to_snippet(argument_hint)
+         insertText = "/" .. name .. " " .. hint_to_snippet(argument_hint)
          insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
       else
-         insertText = name
+         insertText = "/" .. name
          insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
       end
    end
