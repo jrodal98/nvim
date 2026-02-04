@@ -148,30 +148,4 @@ return {
    end,
 
    opts_extend = { "sources.default" },
-
-   -- Set up metamate integration after blink.cmp loads
-   init = function()
-      -- Check for metamate if available (Meta inline AI suggestions)
-      local ok, metamate_provider = pcall(require, "meta-private.cmp.metamate")
-      if ok then
-         local metamate = metamate_provider.get()
-         if metamate then
-            -- Override <C-y> to prioritize metamate
-            vim.keymap.set("i", "<C-y>", function()
-               if metamate.is_visible() then
-                  metamate.accept()
-               else
-                  -- Fall back to blink.cmp accept
-                  local blink_ok, blink = pcall(require, "blink.cmp")
-                  if blink_ok then
-                     blink.accept()
-                  else
-                     -- Fallback to default behavior
-                     return "<C-y>"
-                  end
-               end
-            end, { expr = false, desc = "Accept metamate or blink completion" })
-         end
-      end
-   end,
 }
