@@ -11,13 +11,23 @@ return {
                width = 80,
             },
          },
-         -- prompts = {
-         --    refactor = "Please refactor {this} to be more maintanable",
-         --    security = "Review {file} for security vulnerabilities",
-         --    custom = function(ctx)
-         --       return "Current file: " .. ctx.buf .. " at line " .. ctx.row
-         --    end,
-         -- },
+         prompts = {
+            -- Haunt.nvim integration for sending annotations to AI
+            haunt_all = function()
+               local ok, haunt_sk = pcall(require, "haunt.sidekick")
+               if ok then
+                  return haunt_sk.get_locations()
+               end
+               return "No haunt bookmarks available"
+            end,
+            haunt_buffer = function()
+               local ok, haunt_sk = pcall(require, "haunt.sidekick")
+               if ok then
+                  return haunt_sk.get_locations({ current_buffer = true })
+               end
+               return "No haunt bookmarks available in current buffer"
+            end,
+         },
       },
    },
    keys = {
