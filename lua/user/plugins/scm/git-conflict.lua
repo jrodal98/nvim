@@ -1,5 +1,5 @@
 return {
-   "akinsho/git-conflict.nvim",
+   "spacedentist/resolve.nvim",
    event = { "BufReadPre", "BufNewFile" },
-   config = true,
+   opts = {},
 }
