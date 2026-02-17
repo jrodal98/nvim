@@ -138,6 +138,12 @@ return {
          { "<leader>lq", desc = "Diagnostics to loclist" },
 
          -- ========================================
+         -- Notifications group
+         -- ========================================
+         { "<leader>n", group = "Notifications" },
+         { "<leader>nh", desc = "Notification history" },
+
+         -- ========================================
          -- Rename group
          -- ========================================
          { "<leader>r", group = "Rename" },

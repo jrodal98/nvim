@@ -175,6 +175,15 @@ return {
          end,
          desc = "Buffer diagnostics",
       },
+
+      -- Notifications
+      {
+         "<leader>nh",
+         function()
+            Snacks.notifier.show_history()
+         end,
+         desc = "Notification history",
+      },
    },
    init = function()
       -- Dismiss notifications on Esc
