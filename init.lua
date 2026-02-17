@@ -51,6 +51,7 @@ if not vim.g.vscode then
    add_spec "user.plugins.ui.indentline"
    add_spec "user.plugins.ui.tpipeline"
    add_spec "user.plugins.ui.render-markdown"
+   add_spec "user.plugins.ui.which-key"
 
    -- File Management
    add_spec "user.plugins.files.oil"
