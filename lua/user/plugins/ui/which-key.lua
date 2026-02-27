@@ -4,7 +4,7 @@ return {
    opts = {
       preset = "modern",
       delay = function(ctx)
-         return ctx.plugin and 0 or 200
+         return ctx.plugin and 0 or 500
       end,
       plugins = {
          marks = true,
