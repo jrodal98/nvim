@@ -1,6 +1,6 @@
 local M = {
    "tcr",
-   dir = "~/.config/tcrr",
+   dir = "~/.config/tcr",
    dependencies = {
       "nvim-lua/plenary.nvim",
    },
