@@ -79,6 +79,7 @@ if not vim.g.vscode then
    -- SCM (Source Control Management)
    add_spec "user.plugins.scm.gitsigns"
    add_spec "user.plugins.scm.git-conflict"
+   add_spec "user.plugins.scm.tcr"
 
    -- Utilities
    add_spec "user.plugins.utilities.flatten"
