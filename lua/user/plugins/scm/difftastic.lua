@@ -1,6 +1,7 @@
 return {
-   "difftastic.nvim",
-   dir = "~/dev/difftastic.nvim",
+   "jrodal98/difftastic.nvim",
+   -- "difftastic.nvim",
+   -- dir = "~/dev/difftastic.nvim",
    dependencies = {
       "MunifTanjim/nui.nvim",
       "folke/snacks.nvim",
