@@ -80,6 +80,7 @@ if not vim.g.vscode then
    add_spec "user.plugins.scm.gitsigns"
    add_spec "user.plugins.scm.git-conflict"
    add_spec "user.plugins.scm.tcr"
+   add_spec "user.plugins.scm.difftastic"
 
    -- Utilities
    add_spec "user.plugins.utilities.flatten"

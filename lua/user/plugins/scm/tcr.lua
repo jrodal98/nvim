@@ -7,9 +7,9 @@ local M = {
    -- Only load on Meta devserver
    cond = function()
       -- not ready to productionize
-      return false
-      -- local dotgk = require("init-utils.dotgk-wrapper").get()
-      -- return dotgk.check "meta/devserver"
+      -- return false
+      local dotgk = require("init-utils.dotgk-wrapper").get()
+      return dotgk.check "meta/devserver"
    end,
    config = function()
       require("tcr").setup {
