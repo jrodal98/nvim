@@ -88,7 +88,9 @@ local function lsp_keymaps(bufnr)
    end
 
    -- Navigation (gd, gD, gI, gr handled by snacks.nvim picker)
-   map("n", "K", vim.lsp.buf.hover, "Show hover documentation")
+   map("n", "K", function()
+      vim.lsp.buf.hover { border = "rounded" }
+   end, "Show hover documentation")
 
    -- Diagnostics
    map("n", "gl", vim.diagnostic.open_float, "Show line diagnostics")
@@ -110,7 +112,9 @@ local function lsp_keymaps(bufnr)
 
    -- Info
    map("n", "<leader>li", "<cmd>LspInfo<CR>", "LSP info")
-   map("n", "<leader>ls", vim.lsp.buf.signature_help, "Signature help")
+   map("n", "<leader>ls", function()
+      vim.lsp.buf.signature_help { border = "rounded" }
+   end, "Signature help")
 end
 
 -- LSP attach callback
@@ -126,12 +130,12 @@ M.on_attach = function(client, bufnr)
    end
 
    -- Enable inlay hints if supported
-   if client.supports_method "textDocument/inlayHint" then
+   if client:supports_method "textDocument/inlayHint" then
       vim.lsp.inlay_hint.enable(true, { bufnr })
    end
 
    -- Setup format on save if supported
-   if client.supports_method "textDocument/formatting" then
+   if client:supports_method "textDocument/formatting" then
       vim.api.nvim_clear_autocmds { group = format_augroup, buffer = bufnr }
       vim.api.nvim_create_autocmd("BufWritePost", {
          group = format_augroup,
