@@ -6,8 +6,16 @@ return {
       build = function()
          -- Install tree-sitter-cli if not found
          if vim.fn.executable "tree-sitter" ~= 1 then
-            vim.notify("tree-sitter-cli not found, installing via cargo...", vim.log.levels.INFO)
-            local result = vim.fn.system "cargo install --locked tree-sitter-cli"
+            local install_cmd
+            if vim.fn.executable "devfeature" == 1 then
+               install_cmd = "devfeature install tree_sitter_cli"
+            elseif vim.fn.has "mac" == 1 then
+               install_cmd = "brew install tree-sitter-cli"
+            else
+               install_cmd = "cargo install --locked tree-sitter-cli"
+            end
+            vim.notify("tree-sitter-cli not found, installing...", vim.log.levels.INFO)
+            local result = vim.fn.system(install_cmd)
             if vim.v.shell_error ~= 0 then
                vim.notify("Failed to install tree-sitter-cli: " .. result, vim.log.levels.ERROR)
                return
@@ -42,8 +50,16 @@ return {
 
          -- Ensure tree-sitter-cli is installed (async to not block UI)
          if vim.fn.executable "tree-sitter" ~= 1 then
-            vim.notify("tree-sitter-cli not found, installing via cargo...", vim.log.levels.INFO)
-            vim.system({ "cargo", "install", "--locked", "tree-sitter-cli" }, { text = true }, function(obj)
+            local install_cmd
+            if vim.fn.executable "devfeature" == 1 then
+               install_cmd = { "devfeature", "install", "tree_sitter_cli" }
+            elseif vim.fn.has "mac" == 1 then
+               install_cmd = { "brew", "install", "tree-sitter-cli" }
+            else
+               install_cmd = { "cargo", "install", "--locked", "tree-sitter-cli" }
+            end
+            vim.notify("tree-sitter-cli not found, installing...", vim.log.levels.INFO)
+            vim.system(install_cmd, { text = true }, function(obj)
                vim.schedule(function()
                   if obj.code ~= 0 then
                      vim.notify("Failed to install tree-sitter-cli: " .. (obj.stderr or ""), vim.log.levels.ERROR)
