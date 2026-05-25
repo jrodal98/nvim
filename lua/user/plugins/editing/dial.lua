@@ -44,6 +44,11 @@ function M.config()
             cyclic = true, -- "or" is incremented into "and".
          },
          augend.constant.new {
+            elements = { "yes", "no" },
+            word = true,
+            cyclic = true,
+         },
+         augend.constant.new {
             elements = { "&&", "||" },
             word = false,
             cyclic = true,
