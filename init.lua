@@ -71,7 +71,6 @@ if not vim.g.vscode then
    add_spec "user.plugins.lsp.none-ls"
    add_spec "user.plugins.lsp.nvim-lightbulb"
    add_spec "user.plugins.lsp.trouble"
-   add_spec "user.plugins.lsp.fidget"
    add_spec "user.plugins.lsp.tiny-inline-diagnostic"
    add_spec "user.plugins.lsp.blink-cmp"
    add_spec "user.plugins.lsp.luasnip"
