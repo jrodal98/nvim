@@ -26,17 +26,13 @@ local function organize_imports(bufnr)
    local params = vim.lsp.util.make_range_params(nil, clients[1].offset_encoding)
    params.context = { diagnostics = vim.diagnostic.get() }
 
-   local results = vim.lsp.buf_request_sync(bufnr, "textDocument/codeAction", params)
-   if not results then
-      return
-   end
-
-   for _, result in pairs(results) do
-      for _, action in pairs(result.result or {}) do
+   for _, client in ipairs(clients) do
+      local response = client:request_sync("textDocument/codeAction", params, 1000, bufnr)
+      for _, action in pairs(response and response.result or {}) do
          if action.kind == "source.organizeImports" then
             vim.lsp.buf.code_action { context = { only = { "source.organizeImports" } }, apply = true }
             vim.wait(100)
-            break
+            return
          end
       end
    end
@@ -49,36 +45,34 @@ M.async_format = function(bufnr)
    -- Organize imports first (adds 100ms for ruff but worth it)
    organize_imports(bufnr)
 
-   vim.lsp.buf_request(bufnr, "textDocument/formatting", vim.lsp.util.make_formatting_params {}, function(err, res, ctx)
-      local client = vim.lsp.get_client_by_id(ctx.client_id)
-      if not client then
-         return
-      end
-
+   local clients = vim.lsp.get_clients { bufnr = bufnr, method = "textDocument/formatting" }
+   for _, client in ipairs(clients) do
       if formatters_to_skip[client.name] then
          vim.notify("Formatting: skipping " .. client.name, vim.log.levels.DEBUG)
-         return
-      end
+      else
+         local params = vim.lsp.util.make_formatting_params()
+         client:request("textDocument/formatting", params, function(err, res)
+            if err then
+               local err_msg = type(err) == "string" and err or err.message
+               vim.notify("Formatting: " .. err_msg, vim.log.levels.WARN)
+               return
+            end
 
-      if err then
-         local err_msg = type(err) == "string" and err or err.message
-         vim.notify("Formatting: " .. err_msg, vim.log.levels.WARN)
-         return
-      end
+            -- Don't apply results if buffer is unloaded or modified
+            if not vim.api.nvim_buf_is_loaded(bufnr) or vim.bo[bufnr].modified then
+               return
+            end
 
-      -- Don't apply results if buffer is unloaded or modified
-      if not vim.api.nvim_buf_is_loaded(bufnr) or vim.bo[bufnr].modified then
-         return
+            if res then
+               vim.notify("Formatting: using " .. client.name, vim.log.levels.DEBUG)
+               vim.lsp.util.apply_text_edits(res, bufnr, client.offset_encoding or "utf-16")
+               vim.api.nvim_buf_call(bufnr, function()
+                  vim.cmd "silent noautocmd update"
+               end)
+            end
+         end, bufnr)
       end
-
-      if res then
-         vim.notify("Formatting: using " .. client.name, vim.log.levels.DEBUG)
-         vim.lsp.util.apply_text_edits(res, bufnr, client.offset_encoding or "utf-16")
-         vim.api.nvim_buf_call(bufnr, function()
-            vim.cmd "silent noautocmd update"
-         end)
-      end
-   end)
+   end
 end
 
 -- Setup LSP keymaps for buffer
@@ -95,10 +89,10 @@ local function lsp_keymaps(bufnr)
    -- Diagnostics
    map("n", "gl", vim.diagnostic.open_float, "Show line diagnostics")
    map("n", "<C-n>", function()
-      vim.diagnostic.goto_next { buffer = 0 }
+      vim.diagnostic.jump { count = 1, float = false }
    end, "Next diagnostic")
    map("n", "<C-p>", function()
-      vim.diagnostic.goto_prev { buffer = 0 }
+      vim.diagnostic.jump { count = -1, float = false }
    end, "Previous diagnostic")
    map("n", "<leader>lq", vim.diagnostic.setloclist, "Diagnostics to loclist")
 
