@@ -101,5 +101,11 @@ keymap({ "n", "v" }, "<leader><space>", "za", { desc = "Toggle fold" })
 -- Spellcheck toggle
 keymap("n", "<leader>sc", "<cmd>setlocal spell! spelllang=en_us<CR>", { desc = "Toggle spellcheck" })
 
+-- Built-in undo tree (0.12+)
+keymap("n", "<leader>u", function()
+   vim.cmd "packadd nvim.undotree"
+   vim.cmd.Undotree()
+end, { desc = "Toggle undo tree" })
+
 -- Format JSON (visual mode)
 keymap("v", "<leader>fj", ":!python3 -m json.tool<CR>", { desc = "Format JSON" })

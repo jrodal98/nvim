@@ -78,19 +78,6 @@ vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
    end,
 })
 
--- Periodic check for file changes (every second)
----@diagnostic disable-next-line: undefined-field
-local refresh_timer = vim.uv.new_timer()
-if refresh_timer then
-   refresh_timer:start(
-      0,
-      1000,
-      vim.schedule_wrap(function()
-         vim.cmd "silent! checktime"
-      end)
-   )
-end
-
 -- Notify when file is changed externally
 vim.api.nvim_create_autocmd("FileChangedShellPost", {
    group = refresh_group,

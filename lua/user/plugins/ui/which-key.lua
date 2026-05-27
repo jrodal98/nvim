@@ -61,6 +61,7 @@ return {
          { "<leader>E", desc = "Open Oil file explorer" },
          { "<leader>e", desc = "File explorer (Snacks)" },
          { "<leader>x", desc = "Delete buffer" },
+         { "<leader>u", desc = "Toggle undo tree" },
          { "<leader><space>", desc = "Toggle fold" },
 
          -- ========================================

@@ -42,6 +42,16 @@ function M.config()
    local spaces = function()
       return "spaces: " .. vim.bo[0].shiftwidth
    end
+
+   local lsp_status = {
+      function()
+         return vim.lsp.status()
+      end,
+      cond = function()
+         return vim.lsp.status() ~= ""
+      end,
+   }
+
    local filepath = {
       "filename",
       path = 1,
@@ -65,7 +75,7 @@ function M.config()
       sections = {
          lualine_a = { "mode" },
          lualine_b = { "branch", filepath },
-         lualine_c = {},
+         lualine_c = { lsp_status },
          lualine_x = { diagnostics, diff, spaces, "encoding", filetype },
          lualine_y = { location },
          lualine_z = { "progress" },

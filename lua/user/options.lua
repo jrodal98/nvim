@@ -55,6 +55,8 @@ opt.undofile = true -- Enable persistent undo
 opt.completeopt = { "menuone", "noselect" } -- Completion options
 opt.shortmess:append "c" -- Don't show completion messages
 opt.conceallevel = 0 -- Don't hide characters (e.g., `` in markdown)
+opt.pumborder = "rounded" -- Rounded border on completion popup (0.12+)
+opt.pummaxwidth = 40 -- Cap popup menu width (0.12+)
 
 -- Timing
 opt.updatetime = 300 -- Faster completion and swap write (default: 4000ms)
