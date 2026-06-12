@@ -21,7 +21,7 @@ return {
    event = { "InsertEnter", "CmdlineEnter" },
 
    ---@module 'blink.cmp'
-   ---@type blink.cmp.Config
+   ---@return blink.cmp.Config
    opts = function()
       -- Base configuration (works on all devices)
       local config = {

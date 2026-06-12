@@ -10,6 +10,8 @@
 --   3. Blink.cmp Provider - Protocol implementation
 -- ============================================================================
 
+---@module 'blink.cmp'
+
 --- @class blink.cmp.Source
 local source = {}
 
@@ -674,6 +676,7 @@ end
 --- Get completions for the current context
 --- @param ctx blink.cmp.Context
 --- @param callback fun(response: blink.cmp.CompletionResponse)
+--- @return (fun(): nil)? cancel Optional async cancellation callback
 function source:get_completions(ctx, callback)
    local bufnr = vim.api.nvim_get_current_buf()
 
@@ -689,7 +692,7 @@ function source:get_completions(ctx, callback)
          is_incomplete_backward = false,
          items = {},
       }
-      return
+      return nil
    end
 
    -- Return cached items
@@ -699,6 +702,9 @@ function source:get_completions(ctx, callback)
       is_incomplete_backward = false,
       items = items,
    }
+
+   -- No async work to cancel
+   return nil
 end
 
 --- Configure the source (for testing)

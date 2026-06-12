@@ -23,13 +23,15 @@ local function organize_imports(bufnr)
       return
    end
 
-   local params = vim.lsp.util.make_range_params(nil, clients[1].offset_encoding)
+   local params = vim.lsp.util.make_range_params(nil, clients[1].offset_encoding) --[[@as lsp.CodeActionParams]]
    params.context = { diagnostics = vim.diagnostic.get() }
 
    for _, client in ipairs(clients) do
       local response = client:request_sync("textDocument/codeAction", params, 1000, bufnr)
       for _, action in pairs(response and response.result or {}) do
          if action.kind == "source.organizeImports" then
+            -- `diagnostics` is auto-populated by vim.lsp.buf.code_action; the type defs mark it required
+            ---@diagnostic disable-next-line: missing-fields
             vim.lsp.buf.code_action { context = { only = { "source.organizeImports" } }, apply = true }
             vim.wait(100)
             return

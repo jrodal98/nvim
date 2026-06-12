@@ -202,6 +202,7 @@ local function reset_module(fixtures)
   blink_claude.reset_cache()
   -- Also reset nested placeholder support cache
   blink_claude.configure({ nested_placeholders_supported = nil })
+  ---@diagnostic disable-next-line: missing-parameter
   return blink_claude.new()
 end
 

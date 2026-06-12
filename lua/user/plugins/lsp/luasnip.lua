@@ -8,7 +8,7 @@ return {
    event = { "InsertEnter", "CmdlineEnter" },
 
    config = function()
-      local luasnip = require "luasnip"
+      local luasnip = require "luasnip" --[[@as table]]
       local node_util = require "luasnip.nodes.util"
 
       luasnip.setup {
