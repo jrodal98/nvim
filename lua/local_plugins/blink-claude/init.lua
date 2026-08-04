@@ -4,215 +4,26 @@
 -- Provides autocomplete for /skill and /command names in claude-prompt* files
 -- Triggers only after '/' in markdown buffers with 'claude-prompt' prefix
 --
--- Architecture:
---   1. File Scanner Module - Pure functions for filesystem operations
---   2. Cache Manager - Session-scoped state management
---   3. Blink.cmp Provider - Protocol implementation
+-- Shared infrastructure (frontmatter parsing, argument-hint snippets, cache,
+-- blink.cmp protocol) lives in local_plugins.blink-agent-common; this module
+-- contains only Claude Code's discovery logic (.claude dirs and plugins).
 -- ============================================================================
 
 ---@module 'blink.cmp'
 
---- @class blink.cmp.Source
-local source = {}
-
--- Configuration for testing (can be overridden by tests)
-local config = {
-   home_dir = nil, -- Will use vim.env.HOME if nil
-}
+local fm = require "local_plugins.blink-agent-common.frontmatter"
+local snippet = require "local_plugins.blink-agent-common.snippet"
+local common_source = require "local_plugins.blink-agent-common.source"
 
 -- ============================================================================
--- Section 1: File Scanner Module (Pure Functions)
+-- File Scanner (Claude-specific)
 -- ============================================================================
 
---- Get home directory (supports override for testing)
+--- Resolve home directory from source config (supports test override)
+--- @param config {home_dir: string|nil}
 --- @return string Home directory path
-local function get_home_dir()
+local function home_of(config)
    return config.home_dir or vim.env.HOME or vim.fn.expand "~"
-end
-
---- Skip YAML frontmatter and return the line number after it
---- @param lines string[] File lines
---- @return number Line number after frontmatter (1-indexed), or 1 if no frontmatter
-local function skip_frontmatter(lines)
-   if not lines[1] or lines[1] ~= "---" then
-      return 1
-   end
-
-   for i = 2, #lines do
-      if lines[i] == "---" then
-         return i + 1
-      end
-   end
-
-   return 1 -- Malformed frontmatter
-end
-
---- Extract description from YAML frontmatter
---- @param lines string[] File lines
---- @return string|nil Description or nil
-local function parse_yaml_description(lines)
-   if not lines[1] or lines[1] ~= "---" then
-      return nil
-   end
-
-   local in_description = false
-   local description_parts = {}
-
-   for i = 2, #lines do
-      local line = lines[i]
-
-      if line == "---" then
-         break
-      end
-
-      if line:match "^description:%s*(.*)$" then
-         local inline_desc = line:match "^description:%s*(.+)$"
-         if inline_desc then
-            return inline_desc:gsub('^"', ""):gsub('"$', "")
-         end
-         in_description = true
-      elseif in_description then
-         if line:match "^%w+:" then
-            break
-         elseif line:match "^%s+(.+)$" then
-            local content = line:match "^%s+(.+)$"
-            table.insert(description_parts, content)
-         end
-      end
-   end
-
-   if #description_parts > 0 then
-      return table.concat(description_parts, " ")
-   end
-
-   return nil
-end
-
---- Extract argument-hint from YAML frontmatter
---- @param lines string[] File lines
---- @return string|nil Argument hint or nil
-local function parse_yaml_argument_hint(lines)
-   if not lines[1] or lines[1] ~= "---" then
-      return nil
-   end
-
-   for i = 2, #lines do
-      local line = lines[i]
-      if line == "---" then
-         break
-      end
-
-      if line:match "^argument%-hint:%s*(.*)$" then
-         local hint = line:match "^argument%-hint:%s*(.+)$"
-         if hint then
-            return hint:gsub('^"', ""):gsub('"$', "")
-         end
-      end
-   end
-
-   return nil
-end
-
---- Check if LuaSnip supports nested placeholders
---- @return boolean True if nested placeholders are supported
-local function supports_nested_placeholders()
-   if config.nested_placeholders_supported ~= nil then
-      return config.nested_placeholders_supported
-   end
-
-   local ok, _ = pcall(require, "luasnip")
-   if not ok then
-      config.nested_placeholders_supported = false
-      return false
-   end
-
-   -- Requires parser_nested_assembler in LuaSnip config
-   config.nested_placeholders_supported = true
-   return true
-end
-
---- Convert argument hint to LSP snippet format with nested tab stops
---- @param hint string Argument hint text like "PROMPT [--option VALUE]"
---- @return string LSP snippet with tab stops (supports nesting if LuaSnip configured)
-local function hint_to_snippet(hint)
-   local tokens = {}
-   local current_token = ""
-   local in_brackets = false
-
-   for i = 1, #hint do
-      local char = hint:sub(i, i)
-
-      if char == "[" then
-         in_brackets = true
-         current_token = current_token .. char
-      elseif char == "]" then
-         in_brackets = false
-         current_token = current_token .. char
-      elseif char:match "%s" and not in_brackets then
-         if #current_token > 0 then
-            table.insert(tokens, current_token)
-            current_token = ""
-         end
-      else
-         current_token = current_token .. char
-      end
-   end
-
-   if #current_token > 0 then
-      table.insert(tokens, current_token)
-   end
-
-   local snippet_parts = {}
-   local tab_index = 1
-   local use_nested = supports_nested_placeholders()
-
-   for _, token in ipairs(tokens) do
-      if token:match "^%[.+%]$" then
-         local inner = token:sub(2, -2)
-
-         if use_nested then
-            -- Pattern: --flag VALUE creates ${N:--flag ${N+1:VALUE}} for two-level navigation
-            local flag, value = inner:match "^(%-%-[%w%-]+)%s+([^%s]+)$"
-
-            if flag and value then
-               local snippet = string.format("${%d:%s ${%d:%s}}", tab_index, flag, tab_index + 1, value)
-               table.insert(snippet_parts, snippet)
-               tab_index = tab_index + 2
-            else
-               local snippet = string.format("${%d:%s}", tab_index, inner)
-               table.insert(snippet_parts, snippet)
-               tab_index = tab_index + 1
-            end
-         else
-            -- LuaSnip unavailable - simple sequential placeholders
-            local snippet = string.format("${%d:%s}", tab_index, inner)
-            table.insert(snippet_parts, snippet)
-            tab_index = tab_index + 1
-         end
-      else
-         local snippet = string.format("${%d:%s}", tab_index, token)
-         table.insert(snippet_parts, snippet)
-         tab_index = tab_index + 1
-      end
-   end
-
-   return table.concat(snippet_parts, " ")
-end
-
---- Extract first non-empty content line after frontmatter
---- @param lines string[] File lines
---- @return string|nil First content line or nil
-local function extract_first_content_line(lines)
-   local start_line = skip_frontmatter(lines)
-
-   for i = start_line, #lines do
-      local trimmed = lines[i]:match "^%s*(.-)%s*$"
-      if trimmed and #trimmed > 0 and not trimmed:match "^#" then
-         return trimmed
-      end
-   end
-
-   return nil
 end
 
 --- Extract description and argument hint from file
@@ -226,13 +37,12 @@ local function extract_metadata(file_path, item_type)
       return nil, nil
    end
 
-   -- Extract both description and hint
-   local desc = parse_yaml_description(lines)
-   local hint = parse_yaml_argument_hint(lines)
+   local desc = fm.parse_description(lines)
+   local hint = fm.parse_field(lines, "argument%-hint")
 
    -- Fallback description for commands
    if not desc and item_type == "command" then
-      desc = extract_first_content_line(lines)
+      desc = fm.first_content_line(lines)
    end
 
    return desc, hint
@@ -253,25 +63,17 @@ local function create_completion_item(name, description, file_path, item_type, s
    if plugin_info then
       label = "/" .. plugin_info.name .. ":" .. name
       source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
-
-      if argument_hint and #argument_hint > 0 then
-         insertText = "/" .. plugin_info.name .. ":" .. name .. " " .. hint_to_snippet(argument_hint)
-         insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-      else
-         insertText = "/" .. plugin_info.name .. ":" .. name
-         insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-      end
    else
       label = "/" .. name
       source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
+   end
 
-      if argument_hint and #argument_hint > 0 then
-         insertText = "/" .. name .. " " .. hint_to_snippet(argument_hint)
-         insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-      else
-         insertText = "/" .. name
-         insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-      end
+   if argument_hint and #argument_hint > 0 then
+      insertText = label .. " " .. snippet.hint_to_snippet(argument_hint)
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
+   else
+      insertText = label
+      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
    end
 
    local doc_value = description and (description .. source_suffix)
@@ -311,10 +113,10 @@ end
 
 --- Walk up the directory tree and find all .claude directories
 --- Always includes ~/.claude first
+--- @param home string Home directory
 --- @return string[] List of .claude directory paths found (from cwd up to /)
-local function find_claude_directories()
+local function find_claude_directories(home)
    local claude_dirs = {}
-   local home = get_home_dir()
    local cwd = vim.fn.getcwd()
    local current = cwd
    local home_claude = home .. "/.claude"
@@ -354,10 +156,10 @@ end
 
 --- Parse installed plugins from JSON file
 --- @param cwd string Current working directory for project matching
+--- @param home string Home directory
 --- @return table<string, {path: string, source: string}> Map of plugin_name -> {path, source}
-local function parse_installed_plugins(cwd)
+local function parse_installed_plugins(cwd, home)
    local plugins = {}
-   local home = get_home_dir()
    local json_path = home .. "/.claude/plugins/installed_plugins.json"
 
    -- Check if file exists
@@ -464,17 +266,17 @@ local function extract_completion_name(file_path, item_type)
 end
 
 --- Scan all Claude directories and extract completion items
---- @param bufnr number|nil Buffer number (unused now, kept for compatibility)
+--- @param config {home_dir: string|nil} Source config (test home_dir override)
 --- @return blink.cmp.CompletionItem[]
-local function scan_skills_and_commands(bufnr)
+local function scan_skills_and_commands(config)
    local items = {}
    local seen = {} -- Track labels to avoid duplicates
-   local home = get_home_dir()
+   local home = home_of(config)
    local cwd = vim.fn.getcwd()
    local home_claude = home .. "/.claude"
 
    -- Walk up directory tree and scan all .claude directories found
-   local claude_dirs = find_claude_directories()
+   local claude_dirs = find_claude_directories(home)
 
    for _, claude_dir in ipairs(claude_dirs) do
       -- Determine scope: "user" for ~/.claude, "project" for everything else
@@ -485,11 +287,11 @@ local function scan_skills_and_commands(bufnr)
          { pattern = claude_dir .. "/commands/*.md", type = "command", scope = scope },
       }
 
-      for _, config in ipairs(dir_configs) do
-         local files = vim.fn.glob(config.pattern, false, true)
+      for _, dir_config in ipairs(dir_configs) do
+         local files = vim.fn.glob(dir_config.pattern, false, true)
 
          for _, file_path in ipairs(files) do
-            local name = extract_completion_name(file_path, config.type)
+            local name = extract_completion_name(file_path, dir_config.type)
             if name then
                local label = "/" .. name
 
@@ -497,9 +299,16 @@ local function scan_skills_and_commands(bufnr)
                if not seen[label] then
                   seen[label] = true
 
-                  local description, argument_hint = extract_metadata(file_path, config.type)
-                  local item =
-                     create_completion_item(name, description, file_path, config.type, config.scope, nil, argument_hint)
+                  local description, argument_hint = extract_metadata(file_path, dir_config.type)
+                  local item = create_completion_item(
+                     name,
+                     description,
+                     file_path,
+                     dir_config.type,
+                     dir_config.scope,
+                     nil,
+                     argument_hint
+                  )
                   table.insert(items, item)
                end
             end
@@ -508,7 +317,7 @@ local function scan_skills_and_commands(bufnr)
    end
 
    -- Scan plugin skills and commands (with plugin: prefix)
-   local plugins = parse_installed_plugins(cwd)
+   local plugins = parse_installed_plugins(cwd, home)
 
    for plugin_name, plugin_info in pairs(plugins) do
       local plugin_configs = {
@@ -516,11 +325,11 @@ local function scan_skills_and_commands(bufnr)
          { pattern = plugin_info.path .. "/skills/*/SKILL.md", type = "skill" },
       }
 
-      for _, config in ipairs(plugin_configs) do
-         local files = vim.fn.glob(config.pattern, false, true)
+      for _, dir_config in ipairs(plugin_configs) do
+         local files = vim.fn.glob(dir_config.pattern, false, true)
 
          for _, file_path in ipairs(files) do
-            local name = extract_completion_name(file_path, config.type)
+            local name = extract_completion_name(file_path, dir_config.type)
             if name then
                local label = "/" .. plugin_name .. ":" .. name
 
@@ -528,14 +337,14 @@ local function scan_skills_and_commands(bufnr)
                if not seen[label] then
                   seen[label] = true
 
-                  local description, argument_hint = extract_metadata(file_path, config.type)
+                  local description, argument_hint = extract_metadata(file_path, dir_config.type)
                   local plugin_data = { name = plugin_name, source = plugin_info.source }
                   -- Plugin items always have "user" scope (from plugin installation)
                   local item = create_completion_item(
                      name,
                      description,
                      file_path,
-                     config.type,
+                     dir_config.type,
                      "user",
                      plugin_data,
                      argument_hint
@@ -556,172 +365,11 @@ local function scan_skills_and_commands(bufnr)
 end
 
 -- ============================================================================
--- Section 2: Cache Manager (Stateful)
+-- Source (shared blink.cmp provider from blink-agent-common)
 -- ============================================================================
 
---- Session-scoped cache for completion items
-local cache = {
-   items = nil, -- Cached completion items
-   initialized = false, -- Whether cache has been populated
+return common_source.make {
+   name = "blink-claude",
+   filename_pattern = "^claude%-prompt",
+   scan = scan_skills_and_commands,
 }
-
---- Check if cache should be initialized for the given buffer
---- @param bufnr number Buffer number
---- @return boolean True if this is a claude-prompt markdown buffer and cache not initialized
-local function should_initialize_cache(bufnr)
-   if cache.initialized then
-      return false
-   end
-
-   -- Check filetype
-   if vim.bo[bufnr].filetype ~= "markdown" then
-      return false
-   end
-
-   -- Check filename pattern
-   local filename = vim.api.nvim_buf_get_name(bufnr)
-   local basename = vim.fn.fnamemodify(filename, ":t")
-
-   return basename:match "^claude%-prompt" ~= nil
-end
-
---- Get cached completion items, loading them if necessary
---- @param bufnr number Buffer number (for detecting /tmp and repo context)
---- @return blink.cmp.CompletionItem[] Completion items (may be empty on error)
-local function get_cached_items(bufnr)
-   if not cache.items then
-      -- Attempt to scan and cache, with error handling
-      local ok, items_or_err = pcall(scan_skills_and_commands, bufnr)
-      if ok then
-         cache.items = items_or_err
-         cache.initialized = true
-      else
-         -- Log error for debugging, then fallback
-         vim.notify("blink-claude: Error scanning files: " .. tostring(items_or_err), vim.log.levels.WARN)
-         cache.items = {}
-         cache.initialized = true
-      end
-   end
-   return cache.items
-end
-
--- ============================================================================
--- Section 3: Blink.cmp Provider (Protocol Implementation)
--- ============================================================================
-
---- Check if completions should be shown in current context
---- @param ctx blink.cmp.Context Completion context
---- @param bufnr number Buffer number
---- @return boolean True if completions should be shown
-local function should_show_completions(ctx, bufnr)
-   -- Check filetype
-   if vim.bo[bufnr].filetype ~= "markdown" then
-      return false
-   end
-
-   -- Check filename pattern
-   local filename = vim.api.nvim_buf_get_name(bufnr)
-   local basename = vim.fn.fnamemodify(filename, ":t")
-
-   if not basename:match "^claude%-prompt" then
-      return false
-   end
-
-   -- Check if cursor is positioned after / that starts a word
-   local line = ctx.line
-   local col = ctx.cursor[2]
-
-   -- Check if we just typed / or are in the middle of completing after /
-   if col > 0 then
-      local before_cursor = line:sub(1, col)
-      -- Match patterns like: "/", "/un", "/unslop"
-      -- But NOT "path/to" - the / must be at start of line or after whitespace
-      local slash_match = before_cursor:match "/%w*$"
-      if slash_match then
-         -- Find the position of the / in the line
-         local slash_pos = col - #slash_match + 1
-
-         -- Check that / is either at start of line or preceded by whitespace
-         if slash_pos == 1 then
-            -- / is at start of line
-            return true
-         elseif slash_pos > 1 then
-            -- Check character before /
-            local char_before = line:sub(slash_pos - 1, slash_pos - 1)
-            if char_before:match "%s" then
-               -- / is preceded by whitespace
-               return true
-            end
-         end
-      end
-   end
-
-   return false
-end
-
---- Constructor for the source
---- @param opts table|nil Options (unused for this source)
---- @return blink.cmp.Source
-function source.new(opts)
-   local self = setmetatable({}, { __index = source })
-   return self
-end
-
---- Get trigger characters for this source
---- @return string[]
-function source:get_trigger_characters()
-   return { "/" }
-end
-
---- Get completions for the current context
---- @param ctx blink.cmp.Context
---- @param callback fun(response: blink.cmp.CompletionResponse)
---- @return (fun(): nil)? cancel Optional async cancellation callback
-function source:get_completions(ctx, callback)
-   local bufnr = vim.api.nvim_get_current_buf()
-
-   -- Initialize cache on first claude-prompt buffer (lazy loading)
-   if should_initialize_cache(bufnr) then
-      get_cached_items(bufnr)
-   end
-
-   -- Check if we should show completions in this context
-   if not should_show_completions(ctx, bufnr) then
-      callback {
-         is_incomplete_forward = false,
-         is_incomplete_backward = false,
-         items = {},
-      }
-      return nil
-   end
-
-   -- Return cached items
-   local items = cache.items or {}
-   callback {
-      is_incomplete_forward = false,
-      is_incomplete_backward = false,
-      items = items,
-   }
-
-   -- No async work to cancel
-   return nil
-end
-
---- Configure the source (for testing)
---- @param opts table Options table with optional home_dir and nested_placeholders_supported
-function source.configure(opts)
-   if opts.home_dir then
-      config.home_dir = opts.home_dir
-   end
-   if opts.nested_placeholders_supported ~= nil then
-      config.nested_placeholders_supported = opts.nested_placeholders_supported
-   end
-end
-
---- Reset cache (for testing)
-function source.reset_cache()
-   cache.items = nil
-   cache.initialized = false
-end
-
-return source

@@ -134,6 +134,16 @@ return {
          }
       end
 
+      -- Add Pi completion if pi is available
+      if vim.fn.executable "pi" == 1 then
+         table.insert(config.sources.default, "pi")
+         config.sources.providers.pi = {
+            name = "Pi",
+            module = "local_plugins.blink-pi",
+            score_offset = 10, -- Prioritize over buffer completions
+         }
+      end
+
       -- Add Claude Code completion if claude is available
       if vim.fn.executable "claude" == 1 then
          table.insert(config.sources.default, "claude")

@@ -52,21 +52,13 @@ A blink.cmp completion source for Claude Code skills and commands.
 
 ## Architecture
 
-The source is organized into three clean sections:
+Built on `local_plugins/blink-agent-common` (shared with `blink-pi`), which provides frontmatter parsing, argument-hint→snippet conversion, the session cache, trigger/context logic, and the blink.cmp provider protocol via a source factory.
 
-### 1. File Scanner Module (Pure Functions)
-- `scan_skills_and_commands()` - Scans all Claude directories
-- `extract_completion_name()` - Extracts names from file paths
+This module contains only Claude Code's discovery logic:
 
-### 2. Cache Manager (Stateful)
-- Session-scoped cache with lazy initialization
-- `should_initialize_cache()` - Checks if cache needs loading
-- `get_cached_items()` - Returns cached items with error handling
-
-### 3. Blink.cmp Provider (Protocol Implementation)
-- `get_trigger_characters()` - Returns `{"/"}`
-- `get_completions()` - Main completion handler
-- `should_show_completions()` - Context-aware filtering
+- `scan_skills_and_commands()` - Scans all `.claude` directories (ancestor walk from cwd)
+- `parse_installed_plugins()` - Plugin discovery from `installed_plugins.json`
+- `extract_completion_name()` / `create_completion_item()` - Claude-specific naming (`/name`, `/plugin:name`) and docs
 
 ## Scanned Directories
 
