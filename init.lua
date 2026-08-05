@@ -25,69 +25,26 @@ if dotgk.check "meta" then
    end
 end
 
--- Build plugin spec table for lazy.nvim
-local spec = {}
-
--- Load add_spec helper
-local add_spec_module = require "init-utils.add-spec"
-local function add_spec(item)
-   add_spec_module.add_spec(spec, item)
-end
-
 -- General settings
 require "user.options"
 require "user.keymaps"
 require "user.autocommands"
 require "user.filetypes"
 
--- Load plugins conditionally based on environment
+-- Build plugin spec table for lazy.nvim. Each category directory under
+-- lua/user/plugins/ is imported wholesale, so adding a plugin is just adding
+-- a file to the right category.
+local spec = {
+   -- Core plugins (always loaded, including in VSCode)
+   { import = "user.plugins.core" },
+}
+
 if not vim.g.vscode then
-   -- UI & Theming
-   add_spec "user.plugins.ui.colorscheme"
-   add_spec "user.plugins.ui.alpha"
-   add_spec "user.plugins.ui.lualine"
-   add_spec "user.plugins.ui.bufferline"
-   add_spec "user.plugins.ui.webdevicons"
-   add_spec "user.plugins.ui.indentline"
-   add_spec "user.plugins.ui.tpipeline"
-   add_spec "user.plugins.ui.render-markdown"
-   add_spec "user.plugins.ui.which-key"
+   for _, category in ipairs { "ui", "files", "editing", "lsp", "scm", "utilities" } do
+      table.insert(spec, { import = "user.plugins." .. category })
+   end
 
-   -- File Management
-   add_spec "user.plugins.files.oil"
-   add_spec "user.plugins.files.tv"
-
-   -- Editing
-   add_spec "user.plugins.editing.autopairs"
-   add_spec "user.plugins.editing.comment"
-   add_spec "user.plugins.editing.cutlass"
-   add_spec "user.plugins.editing.surround"
-   add_spec "user.plugins.editing.abolish"
-   add_spec "user.plugins.editing.repeat"
-   add_spec "user.plugins.editing.dial"
-
-   -- LSP & Diagnostics
-   add_spec "user.plugins.lsp.nvim-lspconfig"
-   add_spec "user.plugins.lsp.none-ls"
-   add_spec "user.plugins.lsp.nvim-lightbulb"
-   add_spec "user.plugins.lsp.trouble"
-   add_spec "user.plugins.lsp.tiny-inline-diagnostic"
-   add_spec "user.plugins.lsp.blink-cmp"
-   add_spec "user.plugins.lsp.luasnip"
-
-   -- SCM (Source Control Management)
-   add_spec "user.plugins.scm.gitsigns"
-   add_spec "user.plugins.scm.git-conflict"
-   add_spec "user.plugins.scm.tcr"
-   add_spec "user.plugins.scm.difftastic"
-
-   -- Utilities
-   add_spec "user.plugins.utilities.flatten"
-   add_spec "user.plugins.utilities.toggleterm"
-   add_spec "user.plugins.utilities.sidekick"
-   add_spec "user.plugins.utilities.haunt"
-
-   -- Try to load all Meta-specific plugins at once
+   -- Meta-specific plugins (optional)
    local ok_meta, meta_specs = pcall(require, "meta-private.plugins")
    if ok_meta and meta_specs then
       for _, plugin_spec in ipairs(meta_specs) do
@@ -100,12 +57,6 @@ else
    vim.notify = vscode.notify
    vim.g.clipboard = vim.g.vscode_clipboard
 end
-
--- Core plugins (always loaded)
-add_spec "user.plugins.core.plenary"
-add_spec "user.plugins.core.treesitter"
-add_spec "user.plugins.core.flash"
-add_spec "user.plugins.core.snacks"
 
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath "data" .. "/lazy/lazy.nvim"
@@ -135,7 +86,7 @@ require("lazy").setup {
    defaults = {
       lazy = false, -- Don't lazy-load by default (plugins opt-in to lazy loading)
    },
-   lockfile = vim.fn.stdpath("config") .. "/" .. lockfile,
+   lockfile = vim.fn.stdpath "config" .. "/" .. lockfile,
    performance = {
       rtp = {
          disabled_plugins = {

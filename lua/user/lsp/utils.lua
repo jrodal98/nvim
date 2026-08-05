@@ -16,15 +16,37 @@ if ok then
    end
 end
 
+-- Whether a client might support the organizeImports source action.
+-- Servers that declare codeActionKinds without it are skipped, so we don't
+-- pay a blocking request_sync on every save for servers that can't help
+-- (e.g. lua_ls). Callers filter via get_clients{ method = ... }, which already
+-- confirms codeAction support (possibly dynamically registered, leaving the
+-- static capability nil or boolean) -- so anything without an explicit kinds
+-- list is given the benefit of the doubt and queried.
+local function may_support_organize_imports(client)
+   local provider = client.server_capabilities and client.server_capabilities.codeActionProvider
+   if type(provider) ~= "table" or not provider.codeActionKinds then
+      return true
+   end
+
+   for _, kind in ipairs(provider.codeActionKinds) do
+      if kind == "" or kind == "source" or vim.startswith(kind, "source.organizeImports") then
+         return true
+      end
+   end
+   return false
+end
+
 -- Organize imports via code action
 local function organize_imports(bufnr)
    local clients = vim.lsp.get_clients { bufnr = bufnr, method = "textDocument/codeAction" }
+   clients = vim.tbl_filter(may_support_organize_imports, clients)
    if #clients == 0 then
       return
    end
 
    local params = vim.lsp.util.make_range_params(nil, clients[1].offset_encoding) --[[@as lsp.CodeActionParams]]
-   params.context = { diagnostics = vim.diagnostic.get() }
+   params.context = { diagnostics = vim.diagnostic.get(bufnr) }
 
    for _, client in ipairs(clients) do
       local response = client:request_sync("textDocument/codeAction", params, 1000, bufnr)

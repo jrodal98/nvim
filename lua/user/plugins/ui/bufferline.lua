@@ -5,7 +5,7 @@ local M = {
 
       highlights = {
          fill = {
-            fg = "#ff0000",
+            fg = { attribute = "fg", highlight = "TabLine" },
             bg = { attribute = "bg", highlight = "TabLine" },
          },
 

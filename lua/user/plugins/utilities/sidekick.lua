@@ -23,7 +23,7 @@ return {
             haunt_buffer = function()
                local ok, haunt_sk = pcall(require, "haunt.sidekick")
                if ok then
-                  return haunt_sk.get_locations({ current_buffer = true })
+                  return haunt_sk.get_locations { current_buffer = true }
                end
                return "No haunt bookmarks available in current buffer"
             end,

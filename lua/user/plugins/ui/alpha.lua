@@ -4,11 +4,6 @@ local M = {
 }
 
 function M.config()
-   local status_ok, alpha = pcall(require, "alpha")
-   if not status_ok then
-      return
-   end
-
    local dashboard = require "alpha.themes.dashboard"
    dashboard.section.header.val = {
       [[                               __                ]],
@@ -32,7 +27,7 @@ function M.config()
    dashboard.section.buttons.opts.hl = "Keyword"
 
    dashboard.opts.opts.noautocmd = true
-   alpha.setup(dashboard.opts)
+   require("alpha").setup(dashboard.opts)
 end
 
 return M

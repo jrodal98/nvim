@@ -67,17 +67,6 @@ vim.api.nvim_create_autocmd("TermOpen", {
 
 local refresh_group = vim.api.nvim_create_augroup("FileRefresh", { clear = true })
 
--- Check for file changes when focus is gained or buffer is entered
-vim.api.nvim_create_autocmd({ "FocusGained", "BufEnter" }, {
-   group = refresh_group,
-   desc = "Check for external file changes",
-   callback = function()
-      if vim.fn.filereadable(vim.fn.expand "%") == 1 then
-         vim.cmd.checktime()
-      end
-   end,
-})
-
 -- Periodic check for file changes (every second)
 ---@diagnostic disable-next-line: undefined-field
 local refresh_timer = vim.uv.new_timer()
@@ -176,7 +165,7 @@ vim.api.nvim_create_user_command("LspStop", function(info)
    end
 end, {
    desc = "Disable and stop the given client",
-   nargs = "?",
+   nargs = "*",
    bang = true,
    complete = complete_client,
 })

@@ -1,11 +1,11 @@
 local M = {
    "akinsho/toggleterm.nvim",
    keys = {
-      { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", mode = "n", noremap = true, silent = true },
-      { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", mode = "n", noremap = true, silent = true },
-      { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", mode = "n", noremap = true, silent = true },
-      { "<leader>tt", "<cmd>ToggleTerm direction=tab<cr>", mode = "n", noremap = true, silent = true },
-      { "<leader>tp", "<cmd>lua _PYTHON_TOGGLE()<cr>", mode = "n", noremap = true, silent = true },
+      { "<leader>tf", "<cmd>ToggleTerm direction=float<cr>", desc = "Toggle float terminal", silent = true },
+      { "<leader>th", "<cmd>ToggleTerm direction=horizontal<cr>", desc = "Toggle horizontal terminal", silent = true },
+      { "<leader>tv", "<cmd>ToggleTerm direction=vertical<cr>", desc = "Toggle vertical terminal", silent = true },
+      { "<leader>tt", "<cmd>ToggleTerm direction=tab<cr>", desc = "Toggle tab terminal", silent = true },
+      { "<leader>tp", "<cmd>lua _PYTHON_TOGGLE()<cr>", desc = "Toggle Python REPL", silent = true },
    },
    cmd = {
       "ToggleTerm",
@@ -18,12 +18,7 @@ local M = {
 }
 
 function M.config()
-   local status_ok, toggleterm = pcall(require, "toggleterm")
-   if not status_ok then
-      return
-   end
-
-   toggleterm.setup {
+   require("toggleterm").setup {
       size = 20,
       open_mapping = [[<c-\>]],
       hide_numbers = true,

@@ -35,7 +35,6 @@ M.setup = function()
          prefix = "",
       },
    }
-
 end
 
 M.on_attach = require("user.lsp.utils").on_attach

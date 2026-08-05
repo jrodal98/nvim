@@ -5,12 +5,7 @@ local M = {
 }
 
 function M.config()
-   local status_ok, flatten = pcall(require, "flatten")
-   if not status_ok then
-      return
-   end
-
-   flatten.setup {
+   require("flatten").setup {
       window = {
          open = "alternate",
          focus = "first",

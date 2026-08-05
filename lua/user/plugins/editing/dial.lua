@@ -7,22 +7,10 @@ local M = {
 }
 
 function M.config()
-   local augend_status, augend = pcall(require, "dial.augend")
-   if not augend_status then
-      return
-   end
+   local augend = require "dial.augend"
+   local map = require "dial.map"
 
-   local config_status, config = pcall(require, "dial.config")
-   if not config_status then
-      return
-   end
-
-   local map_status, map = pcall(require, "dial.map")
-   if not map_status then
-      return
-   end
-
-   config.augends:register_group {
+   require("dial.config").augends:register_group {
       default = {
          augend.integer.alias.decimal_int, -- include negative numbers
          augend.integer.alias.hex,

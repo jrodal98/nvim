@@ -3,7 +3,7 @@ local M = {
    event = { "BufReadPre", "BufNewFile" },
    opts = {},
    cmd = "Trouble",
-   dependencies = { "kyazdani42/nvim-web-devicons" },
+   dependencies = { "nvim-tree/nvim-web-devicons" },
 }
 
 return M

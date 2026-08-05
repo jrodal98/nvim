@@ -1,4 +1,4 @@
-# Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.11.4-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
+# Neovim [![Neovim Minimum Version](https://img.shields.io/badge/Neovim-0.12-blueviolet.svg?style=flat-square&logo=Neovim&color=90E59A&logoColor=white)](https://github.com/neovim/neovim)
 
 Modern, modular Neovim configuration with environment-aware plugin loading, AI integration, and graceful degradation.
 
@@ -6,9 +6,9 @@ Modern, modular Neovim configuration with environment-aware plugin loading, AI i
 
 ## Features
 
-- **Modular Architecture**: Plugins organized by category (core/editing/files/lsp/scm/ui/utilities)
+- **Modular Architecture**: Plugins organized by category (core/editing/files/lsp/scm/ui/utilities), imported per-directory
 - **Provider Pattern**: Environment-specific config with graceful fallbacks
-- **Plugin Manager**: [lazy.nvim](https://github.com/folke/lazy.nvim) with custom spec system
+- **Plugin Manager**: [lazy.nvim](https://github.com/folke/lazy.nvim)
 - **LSP Support**: Full language server integration with nvim-lspconfig, none-ls, and blink.cmp completion
 - **Modern UI**: Alpha dashboard, bufferline, lualine, which-key, and more
 - **Git Integration**: Gitsigns, resolve.nvim for conflict resolution
@@ -21,7 +21,7 @@ Modern, modular Neovim configuration with environment-aware plugin loading, AI i
 
 ## Requirements
 
-- Neovim >= 0.11.4
+- Neovim >= 0.12 (uses `pumborder`, `pummaxwidth`, and the bundled `nvim.undotree`)
 - Git
 - A [Nerd Font](https://www.nerdfonts.com/) (optional, for better icons - config works without it)
 
@@ -77,6 +77,10 @@ lua/user/plugins/
 └── utilities/      # Utility plugins (toggleterm, sidekick, haunt, flatten)
 ```
 
+Each category directory is imported wholesale in `init.lua` via lazy.nvim's
+`{ import = "user.plugins.<category>" }`, so every `.lua` file in a category is
+automatically picked up as a plugin spec.
+
 ### Environment Detection
 
 The config uses [dotgk](https://github.com/jrodal98/dotgk) via a dotgk-wrapper (see `lua/init-utils/dotgk-wrapper.lua`) to detect the environment:
@@ -88,19 +92,23 @@ The config uses [dotgk](https://github.com/jrodal98/dotgk) via a dotgk-wrapper (
 
 ### Local Plugins
 
-Local plugins can be stored in `lua/local_plugins/` with this structure:
+Local plugin code lives in `lua/local_plugins/` and is `require`d directly
+(the config directory is on the runtime path). Current residents:
 
 ```
 lua/local_plugins/
-├── plugin_name/
-│   ├── init.lua      # Main plugin code with setup() function
-│   ├── config.lua    # Configuration and defaults
-│   └── ...           # Additional modules
+├── blink-claude/        # blink.cmp source: Claude Code /skill + /command completion
+├── blink-pi/            # blink.cmp source: pi /skill: + prompt-template completion
+└── blink-agent-common/  # Shared infrastructure for the two sources (+ test harness)
 ```
 
-The `add_spec` function automatically detects local plugins and configures them just like other lazy plugins.
+The blink sources are registered in `lua/user/plugins/lsp/blink-cmp.lua`
+(only when the corresponding CLI is installed). Their test suites run headlessly:
 
-You don't need this unless you want to lazy load some local configs. I used to have some stuff here, but it's empty at the time of writing.
+```bash
+timeout 120 nvim --headless -c "lua require('local_plugins.blink-claude.tests.test_blink_claude').run_all_tests()"
+timeout 120 nvim --headless -c "lua require('local_plugins.blink-pi.tests.test_blink_pi').run_all_tests()"
+```
 
 ### Provider Pattern
 
@@ -120,18 +128,6 @@ This allows the same config to work in multiple environments without modificatio
 
 ## Plugin System
 
-### Using add_spec
-
-Plugins are loaded using `add_spec()` in `init.lua`:
-
-```lua
-add_spec "user.plugins.core.treesitter"
-add_spec "user.plugins.files.telescope"
-add_spec "user.plugins.lsp.nvim-lspconfig"
-```
-
-Each call loads a plugin specification from the corresponding lua file.
-
 ### Creating a Plugin Spec
 
 Create a file in `lua/user/plugins/<category>/<name>.lua`:
@@ -147,7 +143,8 @@ return {
 }
 ```
 
-For local plugins, just create the directory in `lua/local_plugins/` and a spec file - auto-detection handles the rest.
+That's it — the category directories are imported automatically in `init.lua`,
+so a new file in the right category is all a new plugin needs.
 
 ## Key Features
 
@@ -157,12 +154,15 @@ Interactive keymap popup that shows available commands as you type:
 
 - **Modern preset** with clean UI and rounded borders
 - **Automatic grouping** by functionality (AI, Code, Diagnostics, Find, Git, etc.)
-- **Smart delay** - 200ms for discovery, instant for plugin triggers
+- **Smart delay** - 500ms for discovery, instant for plugin triggers
 - Press `<leader>` to explore all available commands
 - Press `<leader>?` for buffer-local keymaps
 - Press `<leader>K` to show all keymaps
 
-**Important**: When adding new keybindings, always update `lua/user/plugins/ui/which-key.lua` to keep the documentation in sync. Add new mappings to the appropriate group in the `spec` table.
+Which-key picks up the `desc` set on each keymap automatically — individual
+mappings don't need to be registered anywhere. Only *group names* for new
+leader prefixes need an entry in the `spec` table of
+`lua/user/plugins/ui/which-key.lua`.
 
 ### AI Integration with Sidekick
 
@@ -222,7 +222,7 @@ Snacks notifier with history:
 
 ### UI Customization
 
-- **Colorscheme**: Catppuccin with transparent background support
+- **Colorscheme**: Tokyonight (night) with transparent background
 - **Lualine**: Status line with git, diagnostics, LSP status
 - **Bufferline**: Tab-like buffer navigation
 - **Alpha**: Custom dashboard
@@ -234,7 +234,7 @@ Snacks notifier with history:
 
 Leader key: `<Space>`
 
-**Discovery**: Press `<leader>` and wait 200ms to see all available commands grouped by category. Press `<leader>?` for buffer-local keymaps or `<leader>K` for all keymaps.
+**Discovery**: Press `<leader>` and wait 500ms to see all available commands grouped by category. Press `<leader>?` for buffer-local keymaps or `<leader>K` for all keymaps.
 
 ### Quick Reference
 
@@ -323,8 +323,7 @@ See `lua/user/keymaps.lua` and `lua/user/plugins/ui/which-key.lua` for the compl
 ### Adding a Plugin
 
 1. Create a spec file in `lua/user/plugins/<category>/<name>.lua`
-2. Add `add_spec "user.plugins.<category>.<name>"` to `init.lua`
-3. Restart Neovim
+2. Restart Neovim (the category directories are imported automatically)
 
 ### Modifying Options
 
@@ -332,22 +331,17 @@ Edit `lua/user/options.lua` for Neovim options.
 
 ### Custom Keybindings
 
-**Important**: When adding new keybindings, you must update **both** files:
-
-1. **Define the keymap**:
+1. **Define the keymap** with a `desc`:
    - Edit `lua/user/keymaps.lua` for global keybindings
-   - OR add `keys` table in the plugin spec file for plugin-specific keybindings
+   - OR add a `keys` table in the plugin spec file for plugin-specific keybindings
 
-2. **Document in which-key**:
-   - Edit `lua/user/plugins/ui/which-key.lua`
-   - Add the keybinding to the appropriate group in the `spec` table
-   - If creating a new group, add it with `{ "<leader>x", group = "Group Name" }`
-   - Example:
-     ```lua
-     { "<leader>xy", desc = "Your new command" }
-     ```
+   Which-key shows the `desc` automatically — no separate registration needed.
 
-This ensures the keymap appears in the which-key popup with proper documentation.
+2. **Only if you introduce a new leader prefix**, name its group in
+   `lua/user/plugins/ui/which-key.lua`:
+   ```lua
+   { "<leader>x", group = "Group Name" }
+   ```
 
 ### LSP Servers
 
@@ -375,6 +369,6 @@ Edit `lua/user/plugins/lsp/none-ls.lua` to configure null-ls sources.
 - **Dotgk**: The config uses dotgk for environment detection but gracefully falls back if not available
 - **Meta Integration**: Meta-specific config can be added via the `meta-private` plugin pattern without modifying the public config
 - **Nerd Fonts**: The config works without Nerd Fonts - which-key and other UI elements use simple text icons as fallback
-- **Which-Key**: Always update `which-key.lua` when adding new keybindings to keep documentation in sync
+- **Formatting**: Lua sources are formatted with stylua; enable the pre-commit hook with `git config core.hooksPath .githooks`
 - **Haunt Bookmarks**: Annotations are stored in `~/.local/share/nvim/haunt/` and are scoped per Git branch
 - **Notification History**: Press `<leader>nh` to review all notifications including LSP messages that disappeared

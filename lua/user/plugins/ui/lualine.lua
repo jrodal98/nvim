@@ -4,11 +4,6 @@ local M = {
 }
 
 function M.config()
-   local status_ok, lualine = pcall(require, "lualine")
-   if not status_ok then
-      return
-   end
-
    local hide_in_width = function()
       return vim.fn.winwidth(0) > 80
    end
@@ -64,7 +59,7 @@ function M.config()
       colored = false,
    }
 
-   lualine.setup {
+   require("lualine").setup {
       options = {
          globalstatus = true,
          icons_enabled = true,

@@ -23,30 +23,22 @@ return {
       local install_args = {}
 
       -- Try to load Meta-specific servers (provider handles dotgk check)
+      local meta_servers
       local ok, lsp_servers = pcall(require, "meta-private.lsp.servers")
       if ok then
-         local meta_servers = lsp_servers.get()
-         if meta_servers and #meta_servers > 0 then
-            servers = vim.list_extend(servers, meta_servers)
+         meta_servers = lsp_servers.get()
+      end
 
-            -- Also load Meta-specific install args
-            local ok_args, lsp_install_args = pcall(require, "meta-private.lsp.install-args")
-            if ok_args then
-               local args = lsp_install_args.get()
-               if args then
-                  install_args = args
-               end
-            end
-         else
-            -- No Meta servers, add public LSP servers
-            servers = vim.list_extend(servers, {
-               "pyright",
-               "rust_analyzer",
-               "ruff",
-            })
+      if meta_servers and #meta_servers > 0 then
+         servers = vim.list_extend(servers, meta_servers)
+
+         -- Also load Meta-specific install args
+         local ok_args, lsp_install_args = pcall(require, "meta-private.lsp.install-args")
+         if ok_args then
+            install_args = lsp_install_args.get() or {}
          end
       else
-         -- Private plugin not available, add public LSP servers
+         -- No Meta servers available, use public LSP servers
          servers = vim.list_extend(servers, {
             "pyright",
             "rust_analyzer",
@@ -89,22 +81,27 @@ return {
       require("mason").setup(mason_settings)
       require("mason-lspconfig").setup(mason_lspconfig_settings)
 
+      -- Merge blink.cmp completion capabilities once for all servers.
+      -- Note: this require deliberately triggers lazy.nvim's module loader so
+      -- blink's capabilities are registered *before* servers attach to the
+      -- first buffer (blink's own vim.lsp.config('*') registration would only
+      -- run at InsertEnter, after the initial LspAttach).
+      local capabilities = handlers.capabilities
+      local ok_blink, blink = pcall(require, "blink.cmp")
+      if ok_blink then
+         capabilities = blink.get_lsp_capabilities(capabilities)
+      end
+
       -- Configure and enable LSP servers
       for _, server in ipairs(servers) do
          local opts = {
-            capabilities = handlers.capabilities,
+            capabilities = capabilities,
          }
 
          -- Load server-specific settings if available
          local has_custom_config, custom_config = pcall(require, "user.lsp.settings." .. server)
          if has_custom_config then
             opts = vim.tbl_deep_extend("force", custom_config, opts)
-         end
-
-         -- Merge blink.cmp capabilities if available
-         local ok, blink = pcall(require, "blink.cmp")
-         if ok then
-            opts.capabilities = blink.get_lsp_capabilities(opts.capabilities)
          end
 
          vim.lsp.config(server, opts)

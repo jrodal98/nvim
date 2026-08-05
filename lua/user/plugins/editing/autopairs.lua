@@ -1,17 +1,8 @@
-local M = {
+return {
    "windwp/nvim-autopairs",
    event = "InsertEnter",
-}
-
-function M.config()
-   local status_ok, npairs = pcall(require, "nvim-autopairs")
-   if not status_ok then
-      return
-   end
-
-   npairs.setup {
+   opts = {
       check_ts = true, -- treesitter integration
-      disable_filetype = { "TelescopePrompt" },
       ts_config = {
          lua = { "string", "source" },
          javascript = { "string", "template_string" },
@@ -29,7 +20,5 @@ function M.config()
          highlight = "PmenuSel",
          highlight_grey = "LineNr",
       },
-   }
-end
-
-return M
+   },
+}

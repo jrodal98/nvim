@@ -1,29 +1,56 @@
+-- Command used to install tree-sitter-cli on this machine
+local function tree_sitter_install_cmd()
+   if vim.fn.executable "devfeature" == 1 then
+      return { "devfeature", "install", "tree_sitter_cli" }
+   elseif vim.fn.has "mac" == 1 then
+      return { "brew", "install", "tree-sitter-cli" }
+   end
+   return { "cargo", "install", "--locked", "tree-sitter-cli" }
+end
+
+--- Ensure tree-sitter-cli is available, then call on_ready.
+--- @param sync boolean Install synchronously (build step) or async (startup)
+--- @param on_ready fun() Called once the CLI is available; skipped on failure
+local function ensure_tree_sitter_cli(sync, on_ready)
+   if vim.fn.executable "tree-sitter" == 1 then
+      on_ready()
+      return
+   end
+
+   local install_cmd = tree_sitter_install_cmd()
+   vim.notify("tree-sitter-cli not found, installing...", vim.log.levels.INFO)
+
+   if sync then
+      local result = vim.fn.system(install_cmd)
+      if vim.v.shell_error ~= 0 then
+         vim.notify("Failed to install tree-sitter-cli: " .. result, vim.log.levels.ERROR)
+         return
+      end
+      vim.notify("tree-sitter-cli installed successfully", vim.log.levels.INFO)
+      on_ready()
+   else
+      vim.system(install_cmd, { text = true }, function(obj)
+         vim.schedule(function()
+            if obj.code ~= 0 then
+               vim.notify("Failed to install tree-sitter-cli: " .. (obj.stderr or ""), vim.log.levels.ERROR)
+            else
+               vim.notify("tree-sitter-cli installed successfully", vim.log.levels.INFO)
+               on_ready()
+            end
+         end)
+      end)
+   end
+end
+
 return {
    {
       "nvim-treesitter/nvim-treesitter",
       branch = "main",
       lazy = false,
       build = function()
-         -- Install tree-sitter-cli if not found
-         if vim.fn.executable "tree-sitter" ~= 1 then
-            local install_cmd
-            if vim.fn.executable "devfeature" == 1 then
-               install_cmd = "devfeature install tree_sitter_cli"
-            elseif vim.fn.has "mac" == 1 then
-               install_cmd = "brew install tree-sitter-cli"
-            else
-               install_cmd = "cargo install --locked tree-sitter-cli"
-            end
-            vim.notify("tree-sitter-cli not found, installing...", vim.log.levels.INFO)
-            local result = vim.fn.system(install_cmd)
-            if vim.v.shell_error ~= 0 then
-               vim.notify("Failed to install tree-sitter-cli: " .. result, vim.log.levels.ERROR)
-               return
-            end
-            vim.notify("tree-sitter-cli installed successfully", vim.log.levels.INFO)
-         end
-         -- Run TSUpdate
-         vim.cmd "TSUpdate"
+         ensure_tree_sitter_cli(true, function()
+            vim.cmd "TSUpdate"
+         end)
       end,
       config = function()
          local parsers = {
@@ -44,34 +71,10 @@ return {
             "yaml",
          }
 
-         local function install_parsers()
-            require("nvim-treesitter").install(parsers)
-         end
-
          -- Ensure tree-sitter-cli is installed (async to not block UI)
-         if vim.fn.executable "tree-sitter" ~= 1 then
-            local install_cmd
-            if vim.fn.executable "devfeature" == 1 then
-               install_cmd = { "devfeature", "install", "tree_sitter_cli" }
-            elseif vim.fn.has "mac" == 1 then
-               install_cmd = { "brew", "install", "tree-sitter-cli" }
-            else
-               install_cmd = { "cargo", "install", "--locked", "tree-sitter-cli" }
-            end
-            vim.notify("tree-sitter-cli not found, installing...", vim.log.levels.INFO)
-            vim.system(install_cmd, { text = true }, function(obj)
-               vim.schedule(function()
-                  if obj.code ~= 0 then
-                     vim.notify("Failed to install tree-sitter-cli: " .. (obj.stderr or ""), vim.log.levels.ERROR)
-                  else
-                     vim.notify("tree-sitter-cli installed successfully", vim.log.levels.INFO)
-                     install_parsers()
-                  end
-               end)
-            end)
-         else
-            install_parsers()
-         end
+         ensure_tree_sitter_cli(false, function()
+            require("nvim-treesitter").install(parsers)
+         end)
 
          -- Enable treesitter features via autocmd
          if not vim.g.vscode then

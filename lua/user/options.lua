@@ -21,7 +21,7 @@ opt.pumheight = 10 -- Popup menu height
 opt.showtabline = 0 -- Never show tabline
 opt.numberwidth = 2 -- Minimal number width
 opt.guifont = "monospace:h17" -- GUI font
-opt.fillchars.eob = " " -- Hide end-of-buffer tildes
+opt.fillchars = { eob = " " } -- Hide end-of-buffer tildes
 
 -- Splitting
 opt.splitbelow = true -- Horizontal splits go below

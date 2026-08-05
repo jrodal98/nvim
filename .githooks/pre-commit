@@ -1,6 +1,8 @@
 #!/bin/bash
+# Format all Lua sources before committing.
+# Enable with: git config core.hooksPath .githooks
 
-stylua init.lua lua data ftdetect
-git add init.lua lua data ftdetect
+stylua init.lua lua ftplugin ftdetect
+git add init.lua lua ftplugin ftdetect
 
 echo "formatted lua files"
