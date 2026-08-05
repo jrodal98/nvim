@@ -115,6 +115,32 @@ function M.parse_field(lines, field)
    return nil
 end
 
+--- Read a file and extract its frontmatter metadata
+--- @param file_path string Path to the .md file
+--- @param opts {first_line_fallback: boolean|nil}|nil Fall back to the first
+---   content line when the frontmatter has no description
+--- @return {name: string|nil, description: string|nil, argument_hint: string|nil}
+function M.extract(file_path, opts)
+   opts = opts or {}
+
+   local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
+   if not ok or not lines then
+      return {}
+   end
+
+   local meta = {
+      name = M.parse_field(lines, "name"),
+      description = M.parse_description(lines),
+      argument_hint = M.parse_field(lines, "argument%-hint"),
+   }
+
+   if not meta.description and opts.first_line_fallback then
+      meta.description = M.first_content_line(lines)
+   end
+
+   return meta
+end
+
 --- Extract first non-empty, non-heading content line after frontmatter
 --- @param lines string[] File lines
 --- @return string|nil First content line or nil

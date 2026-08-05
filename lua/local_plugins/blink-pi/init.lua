@@ -5,27 +5,22 @@
 -- pi-editor* files (pi's external editor buffers).
 -- Triggers only after '/' in markdown buffers with 'pi-editor' prefix.
 --
--- Shared infrastructure (frontmatter parsing, argument-hint snippets, cache,
--- blink.cmp protocol) lives in local_plugins.blink-agent-common; this module
--- contains only pi's discovery logic.
+-- Shared infrastructure (frontmatter parsing, argument-hint snippets, item
+-- construction, cache, blink.cmp protocol) lives in
+-- local_plugins.blink-agent-common; this module contains only pi's discovery
+-- logic.
 -- ============================================================================
 
 ---@module 'blink.cmp'
 
 local fm = require "local_plugins.blink-agent-common.frontmatter"
-local snippet = require "local_plugins.blink-agent-common.snippet"
+local items_builder = require "local_plugins.blink-agent-common.items"
 local common_source = require "local_plugins.blink-agent-common.source"
+local util = require "local_plugins.blink-agent-common.util"
 
 -- ============================================================================
 -- File Scanner (pi-specific)
 -- ============================================================================
-
---- Resolve home directory from source config (supports test override)
---- @param config {home_dir: string|nil}
---- @return string Home directory path
-local function home_of(config)
-   return config.home_dir or vim.env.HOME or vim.fn.expand "~"
-end
 
 --- Extract name, description and argument hint from file
 --- @param file_path string Path to the .md file
@@ -34,21 +29,9 @@ end
 --- @return string|nil description Description text or nil
 --- @return string|nil argument_hint Argument hint or nil
 local function extract_metadata(file_path, item_type)
-   local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
-   if not ok or not lines then
-      return nil, nil, nil
-   end
-
-   local name = fm.parse_field(lines, "name")
-   local desc = fm.parse_description(lines)
-   local hint = fm.parse_field(lines, "argument%-hint")
-
    -- Prompt templates fall back to the first non-empty line as description
-   if not desc and item_type == "prompt" then
-      desc = fm.first_content_line(lines)
-   end
-
-   return name, desc, hint
+   local meta = fm.extract(file_path, { first_line_fallback = item_type == "prompt" })
+   return meta.name, meta.description, meta.argument_hint
 end
 
 --- Create a completion item
@@ -62,62 +45,22 @@ end
 local function create_completion_item(name, description, file_path, item_type, scope, argument_hint)
    -- Pi invokes skills as /skill:name, prompt templates as /name
    local label = item_type == "skill" and ("/skill:" .. name) or ("/" .. name)
-
-   local insertText, insertTextFormat
-   if argument_hint and #argument_hint > 0 then
-      insertText = label .. " " .. snippet.hint_to_snippet(argument_hint)
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-   else
-      insertText = label
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-   end
-
    local type_label = item_type == "skill" and "skill" or "prompt template"
-   local doc_value = (description or ("Pi " .. type_label .. ": " .. name)) .. "\n\n(" .. scope .. ")"
 
-   if argument_hint and #argument_hint > 0 then
-      doc_value = doc_value .. "\n\n**Usage:** `" .. argument_hint .. "`"
-   end
-
-   return {
+   return items_builder.make {
       label = label,
-      kind = vim.lsp.protocol.CompletionItemKind.Snippet,
-      insertTextFormat = insertTextFormat,
-      insertText = insertText,
-      labelDetails = {
-         description = "Pi",
-      },
-      documentation = {
-         kind = "markdown",
-         value = doc_value,
-      },
+      source_label = "Pi",
+      description = description,
+      fallback_description = "Pi " .. type_label .. ": " .. name,
+      doc_suffix = "\n\n(" .. scope .. ")",
+      argument_hint = argument_hint,
+      file = file_path,
       data = {
          source = "pi",
-         file = file_path,
          type = item_type,
          scope = scope,
       },
    }
-end
-
---- Call fn with each ancestor directory of cwd (including cwd itself)
---- @param fn fun(dir: string)
-local function walk_ancestors(fn)
-   local current = vim.fn.getcwd()
-
-   while true do
-      fn(current)
-
-      if current == "/" then
-         break
-      end
-
-      local parent = vim.fn.fnamemodify(current, ":h")
-      if parent == current then
-         break
-      end
-      current = parent
-   end
 end
 
 --- Maximum directory depth for recursive SKILL.md discovery
@@ -257,14 +200,14 @@ local function find_skill_locations(home)
    add_dir(home .. "/.agents/skills", "user", false)
 
    -- Project locations (cwd and ancestors)
-   walk_ancestors(function(dir)
+   util.walk_ancestors(function(dir)
       add_dir(dir .. "/.pi/skills", "project", true)
       add_dir(dir .. "/.agents/skills", "project", false)
    end)
 
    -- Settings-configured locations
    add_settings_entries(home .. "/.pi/agent/settings.json", "settings")
-   walk_ancestors(function(dir)
+   util.walk_ancestors(function(dir)
       add_settings_entries(dir .. "/.pi/settings.json", "settings")
    end)
 
@@ -292,7 +235,7 @@ local function find_prompt_locations(home)
 
    add_dir(home .. "/.pi/agent/prompts", "user")
 
-   walk_ancestors(function(dir)
+   util.walk_ancestors(function(dir)
       add_dir(dir .. "/.pi/prompts", "project")
    end)
 
@@ -305,7 +248,7 @@ end
 local function scan_skills_and_prompts(config)
    local items = {}
    local seen = {} -- Track labels to avoid duplicates (first found wins, like pi)
-   local home = home_of(config)
+   local home = util.home_of(config)
 
    local function add_item(name, item_type, file_path, scope, fm_name, description, hint)
       name = fm_name or name
@@ -373,11 +316,6 @@ local function scan_skills_and_prompts(config)
          add_item(file_name, "skill", entry.path, entry.scope, fm_name, description, hint)
       end
    end
-
-   -- Sort alphabetically by label
-   table.sort(items, function(a, b)
-      return a.label < b.label
-   end)
 
    return items
 end

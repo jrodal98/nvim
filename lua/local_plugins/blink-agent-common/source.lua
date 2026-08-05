@@ -3,7 +3,7 @@
 -- ============================================================================
 -- Shared by blink-claude and blink-pi. Owns the pieces that are identical
 -- across agent completion sources:
---   - session-scoped item cache with error handling
+--   - session-scoped item cache with error handling (+ alphabetical sorting)
 --   - target-buffer detection (markdown + basename pattern)
 --   - slash-context trigger logic
 --   - blink.cmp provider protocol (new/get_trigger_characters/get_completions)
@@ -66,6 +66,9 @@ function M.make(opts)
       if not cache.items then
          local ok, items_or_err = pcall(opts.scan, config)
          if ok then
+            table.sort(items_or_err, function(a, b)
+               return a.label < b.label
+            end)
             cache.items = items_or_err
             cache.initialized = true
          else

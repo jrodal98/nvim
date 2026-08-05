@@ -4,49 +4,22 @@
 -- Provides autocomplete for /skill and /command names in claude-prompt* files
 -- Triggers only after '/' in markdown buffers with 'claude-prompt' prefix
 --
--- Shared infrastructure (frontmatter parsing, argument-hint snippets, cache,
--- blink.cmp protocol) lives in local_plugins.blink-agent-common; this module
--- contains only Claude Code's discovery logic (.claude dirs and plugins).
+-- Shared infrastructure (frontmatter parsing, argument-hint snippets, item
+-- construction, cache, blink.cmp protocol) lives in
+-- local_plugins.blink-agent-common; this module contains only Claude Code's
+-- discovery logic (.claude dirs and plugins).
 -- ============================================================================
 
 ---@module 'blink.cmp'
 
 local fm = require "local_plugins.blink-agent-common.frontmatter"
-local snippet = require "local_plugins.blink-agent-common.snippet"
+local items_builder = require "local_plugins.blink-agent-common.items"
 local common_source = require "local_plugins.blink-agent-common.source"
+local util = require "local_plugins.blink-agent-common.util"
 
 -- ============================================================================
 -- File Scanner (Claude-specific)
 -- ============================================================================
-
---- Resolve home directory from source config (supports test override)
---- @param config {home_dir: string|nil}
---- @return string Home directory path
-local function home_of(config)
-   return config.home_dir or vim.env.HOME or vim.fn.expand "~"
-end
-
---- Extract description and argument hint from file
---- @param file_path string Path to the .md file
---- @param item_type string Either "skill" or "command"
---- @return string|nil description Description text or nil
---- @return string|nil argument_hint Argument hint or nil
-local function extract_metadata(file_path, item_type)
-   local ok, lines = pcall(vim.fn.readfile, file_path, "", 50)
-   if not ok or not lines then
-      return nil, nil
-   end
-
-   local desc = fm.parse_description(lines)
-   local hint = fm.parse_field(lines, "argument%-hint")
-
-   -- Fallback description for commands
-   if not desc and item_type == "command" then
-      desc = fm.first_content_line(lines)
-   end
-
-   return desc, hint
-end
 
 --- Create a completion item
 --- @param name string The skill/command name
@@ -58,34 +31,17 @@ end
 --- @param argument_hint string|nil Optional argument hint for snippets
 --- @return blink.cmp.CompletionItem
 local function create_completion_item(name, description, file_path, item_type, scope, plugin_info, argument_hint)
-   local label, insertText, insertTextFormat, source_suffix
-
+   local label, doc_suffix
    if plugin_info then
       label = "/" .. plugin_info.name .. ":" .. name
-      source_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
+      doc_suffix = "\n\n(plugin:" .. plugin_info.name .. "@" .. plugin_info.source .. ")"
    else
       label = "/" .. name
-      source_suffix = scope == "user" and "\n\n(user)" or "\n\n(project)"
-   end
-
-   if argument_hint and #argument_hint > 0 then
-      insertText = label .. " " .. snippet.hint_to_snippet(argument_hint)
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.Snippet
-   else
-      insertText = label
-      insertTextFormat = vim.lsp.protocol.InsertTextFormat.PlainText
-   end
-
-   local doc_value = description and (description .. source_suffix)
-      or ("Claude " .. item_type .. ": " .. name .. source_suffix)
-
-   if argument_hint and #argument_hint > 0 then
-      doc_value = doc_value .. "\n\n**Usage:** `" .. argument_hint .. "`"
+      doc_suffix = "\n\n(" .. scope .. ")"
    end
 
    local data = {
       source = "claude",
-      file = file_path,
       type = item_type,
       scope = scope,
    }
@@ -95,18 +51,14 @@ local function create_completion_item(name, description, file_path, item_type, s
       data.plugin_source = plugin_info.source
    end
 
-   return {
+   return items_builder.make {
       label = label,
-      kind = vim.lsp.protocol.CompletionItemKind.Snippet,
-      insertTextFormat = insertTextFormat,
-      insertText = insertText,
-      labelDetails = {
-         description = "Claude",
-      },
-      documentation = {
-         kind = "markdown",
-         value = doc_value,
-      },
+      source_label = "Claude",
+      description = description,
+      fallback_description = "Claude " .. item_type .. ": " .. name,
+      doc_suffix = doc_suffix,
+      argument_hint = argument_hint,
+      file = file_path,
       data = data,
    }
 end
@@ -117,8 +69,6 @@ end
 --- @return string[] List of .claude directory paths found (from cwd up to /)
 local function find_claude_directories(home)
    local claude_dirs = {}
-   local cwd = vim.fn.getcwd()
-   local current = cwd
    local home_claude = home .. "/.claude"
 
    -- Always include ~/.claude first
@@ -128,28 +78,15 @@ local function find_claude_directories(home)
    end
 
    -- Walk up from cwd to root
-   while true do
-      local claude_path = current .. "/.claude"
+   util.walk_ancestors(function(dir)
+      local claude_path = dir .. "/.claude"
       local path_stat = vim.uv.fs_stat(claude_path)
 
       -- Add if it exists and is not already added (avoid duplicate ~/.claude)
       if path_stat and path_stat.type == "directory" and claude_path ~= home_claude then
          table.insert(claude_dirs, claude_path)
       end
-
-      -- Check if we've reached the root
-      if current == "/" then
-         break
-      end
-
-      -- Move up one directory
-      local parent = vim.fn.fnamemodify(current, ":h")
-      if parent == current then
-         -- Can't go up anymore
-         break
-      end
-      current = parent
-   end
+   end)
 
    return claude_dirs
 end
@@ -265,13 +202,24 @@ local function extract_completion_name(file_path, item_type)
    return nil
 end
 
+--- Extract description and argument hint from file
+--- @param file_path string Path to the .md file
+--- @param item_type string Either "skill" or "command"
+--- @return string|nil description Description text or nil
+--- @return string|nil argument_hint Argument hint or nil
+local function extract_metadata(file_path, item_type)
+   -- Commands fall back to the first non-empty line as description
+   local meta = fm.extract(file_path, { first_line_fallback = item_type == "command" })
+   return meta.description, meta.argument_hint
+end
+
 --- Scan all Claude directories and extract completion items
 --- @param config {home_dir: string|nil} Source config (test home_dir override)
 --- @return blink.cmp.CompletionItem[]
 local function scan_skills_and_commands(config)
    local items = {}
    local seen = {} -- Track labels to avoid duplicates
-   local home = home_of(config)
+   local home = util.home_of(config)
    local cwd = vim.fn.getcwd()
    local home_claude = home .. "/.claude"
 
@@ -355,11 +303,6 @@ local function scan_skills_and_commands(config)
          end
       end
    end
-
-   -- Sort alphabetically by label
-   table.sort(items, function(a, b)
-      return a.label < b.label
-   end)
 
    return items
 end
