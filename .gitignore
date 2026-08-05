@@ -42,3 +42,6 @@ luac.out
 
 # Claude Code runtime files (settings*.json are tracked via force-add)
 .claude/
+
+# pi runtime files (task lists)
+.pi/tasks
