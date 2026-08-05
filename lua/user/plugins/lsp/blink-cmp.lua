@@ -112,8 +112,10 @@ return {
          if meta_ok then
             local meta_config = blink_config_provider.get()
             if meta_config then
-               -- Merge fuzzy config and providers
-               config.fuzzy = meta_config.fuzzy
+               -- Merge fuzzy config (if provided) and providers
+               if meta_config.fuzzy then
+                  config.fuzzy = meta_config.fuzzy
+               end
                config.sources.providers =
                   vim.tbl_deep_extend("force", config.sources.providers, meta_config.sources.providers)
                -- Add meta source names to default list
