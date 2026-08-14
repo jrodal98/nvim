@@ -207,8 +207,20 @@ local assert_contains = harness.assert_contains
 local find_item = harness.find_item
 local get_items = harness.get_items
 
+local prompt_buffer_counter = 0
+
+local function create_prompt_buffer(parent_prefix)
+   prompt_buffer_counter = prompt_buffer_counter + 1
+   local bufnr = vim.api.nvim_create_buf(false, false)
+   local path = "/tmp/" .. parent_prefix .. prompt_buffer_counter .. "/prompt.md"
+   vim.api.nvim_buf_set_name(bufnr, path)
+   vim.api.nvim_set_current_buf(bufnr)
+   vim.bo[bufnr].filetype = "markdown"
+   return bufnr
+end
+
 local function create_test_buffer()
-   return harness.create_test_buffer("pi-editor-", ".pi.md")
+   return create_prompt_buffer "pi-editor-test-"
 end
 
 local function reset_module(fixtures)
@@ -418,25 +430,28 @@ function M.test_filename_filtering()
 
    local source = reset_module(fixtures)
 
-   -- pi-editor buffer: should show
+   -- pi-editor-*/prompt.md buffer: should show
    local bufnr1 = create_test_buffer()
    local ctx1 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr1 }
-   assert_true(#get_items(source, ctx1) > 0, "Shows completions in pi-editor file")
+   assert_true(#get_items(source, ctx1) > 0, "Shows completions in pi-editor-*/prompt.md file")
+
+   -- An unrelated prompt.md buffer: should not show
+   local bufnr2 = create_prompt_buffer "project-"
+   local ctx2 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr2 }
+   assert_eq(#get_items(source, ctx2), 0, "No completions in unrelated prompt.md file")
 
    -- Regular markdown buffer: should not show
-   local bufnr2 = harness.create_test_buffer "regular-"
-
-   local ctx2 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr2 }
-   assert_eq(#get_items(source, ctx2), 0, "No completions in regular markdown file")
+   local bufnr3 = harness.create_test_buffer "regular-"
+   local ctx3 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr3 }
+   assert_eq(#get_items(source, ctx3), 0, "No completions in regular markdown file")
 
    -- claude-prompt buffer: should not show (that's blink-claude's turf)
-   local bufnr3 = harness.create_test_buffer "claude-prompt-"
+   local bufnr4 = harness.create_test_buffer "claude-prompt-"
+   local ctx4 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr4 }
+   assert_eq(#get_items(source, ctx4), 0, "No completions in claude-prompt file")
 
-   local ctx3 = { line = "/", cursor = { 1, 1 }, bufnr = bufnr3 }
-   assert_eq(#get_items(source, ctx3), 0, "No completions in claude-prompt file")
-
-   print "  ✓ Shows in pi-editor* files"
-   print "  ✓ Hides in other markdown files"
+   print "  ✓ Shows in pi-editor-*/prompt.md files"
+   print "  ✓ Hides in unrelated prompt.md and other markdown files"
 
    teardown_fixtures()
 end

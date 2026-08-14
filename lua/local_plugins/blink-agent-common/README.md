@@ -28,22 +28,22 @@ YAML frontmatter helpers: `start`, `strip_quotes`, `skip`, `parse_description` (
 
 ```lua
 return require("local_plugins.blink-agent-common.source").make {
-   name = "blink-pi",                 -- error-notification prefix
-   filename_pattern = "^pi%-editor",  -- basename pattern for target buffers
-   scan = function(config)            -- config.home_dir is the test override
-      return items                    -- blink.cmp.CompletionItem[]
+   name = "blink-pi",                               -- error-notification prefix
+   path_pattern = "/pi%-editor%-[^/]+/prompt%.md$", -- full-path pattern for target buffers
+   scan = function(config)                          -- config.home_dir is the test override
+      return items                                  -- blink.cmp.CompletionItem[]
    end,
 }
 ```
 
-Owns: session-scoped caching with pcall/notify error handling (items are sorted alphabetically after the scan), target-buffer detection (markdown + basename pattern), slash-context trigger logic (`/` at line start or after whitespace, continuing through `[%w:_-]`), the provider protocol (`new`, `get_trigger_characters` → `{"/", ":"}`, `get_completions`), and test hooks (`configure`, `reset_cache`).
+Owns: session-scoped caching with pcall/notify error handling (items are sorted alphabetically after the scan), target-buffer detection (markdown + either a full-path or basename pattern), slash-context trigger logic (`/` at line start or after whitespace, continuing through `[%w:_-]`), the provider protocol (`new`, `get_trigger_characters` → `{"/", ":"}`, `get_completions`), and test hooks (`configure`, `reset_cache`).
 
 ### `tests/harness.lua`
 Shared test utilities for both suites: `assert_eq`/`assert_true`/`assert_contains`, `create_test_buffer(prefix, suffix)`, `reset_module(module_name, fixtures)`, `find_item`, `get_items`, and the `run(suite_name, tests)` runner. Fixture setup stays in each suite.
 
 ## Adding a new source
 
-Write a scanner that returns completion items, pick a buffer filename pattern, and call `make`. See `blink-pi/init.lua` for the minimal shape; use `frontmatter` and `snippet` for `.md` metadata and argument hints.
+Write a scanner that returns completion items, pick a full-path `path_pattern` or basename `filename_pattern`, and call `make`. See `blink-pi/init.lua` for the minimal shape; use `frontmatter` and `snippet` for `.md` metadata and argument hints.
 
 ## Testing
 

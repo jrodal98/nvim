@@ -2,8 +2,8 @@
 -- blink-pi: Pi Skills/Prompt-Template Completion Source
 -- ============================================================================
 -- Provides autocomplete for /skill:name and /prompt-template names in
--- pi-editor* files (pi's external editor buffers).
--- Triggers only after '/' in markdown buffers with 'pi-editor' prefix.
+-- pi-editor-*/prompt.md files (pi's external editor buffers).
+-- Triggers only after '/' in markdown buffers at that path.
 --
 -- Shared infrastructure (frontmatter parsing, argument-hint snippets, item
 -- construction, cache, blink.cmp protocol) lives in
@@ -326,6 +326,6 @@ end
 
 return common_source.make {
    name = "blink-pi",
-   filename_pattern = "^pi%-editor",
+   path_pattern = "/pi%-editor%-[^/]+/prompt%.md$",
    scan = scan_skills_and_prompts,
 }

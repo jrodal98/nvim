@@ -4,7 +4,7 @@ A blink.cmp completion source for [pi](https://github.com/badlogic/pi-mono) skil
 
 ## Features
 
-- ✅ Autocomplete `/prompt-template` and `/skill:name` in `pi-editor*` files (pi's external editor buffers, e.g. `pi-editor-1785882472509.pi.md`)
+- ✅ Autocomplete `/prompt-template` and `/skill:name` in `pi-editor-*/prompt.md` files (pi's external editor buffers, e.g. `/tmp/pi-editor-dTmIUN/prompt.md`)
 - ✅ **Pi-native syntax**: prompt templates insert as `/name`, skills as `/skill:name`
 - ✅ Scans all pi discovery locations:
   - `~/.pi/agent/prompts/*.md` and project `.pi/prompts/*.md` (prompt templates)
@@ -22,7 +22,7 @@ A blink.cmp completion source for [pi](https://github.com/badlogic/pi-mono) skil
 
 ## Usage
 
-1. Hit pi's external-editor keybind — the prompt opens as a `pi-editor-*.pi.md` buffer
+1. Hit pi's external-editor keybind — the prompt opens as a `pi-editor-*/prompt.md` buffer
 2. Type `/` for prompt templates, `/skill:` for skills
 3. Docs popup shows description, scope (`user` / `project` / `settings`), and usage hint
 

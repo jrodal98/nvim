@@ -13,7 +13,7 @@
 --
 --   return require("local_plugins.blink-agent-common.source").make {
 --      name = "blink-pi",
---      filename_pattern = "^pi%-editor",
+--      path_pattern = "/pi%-editor%-[^/]+/prompt%.md$",
 --      scan = function(config) return items end, -- config has home_dir override
 --   }
 -- ============================================================================
@@ -24,7 +24,8 @@ local M = {}
 
 --- @class BlinkAgentSourceOpts
 --- @field name string Plugin name for error notifications (e.g. "blink-pi")
---- @field filename_pattern string Lua pattern matched against the buffer basename
+--- @field filename_pattern string|nil Lua pattern matched against the buffer basename
+--- @field path_pattern string|nil Lua pattern matched against the full buffer path; takes precedence over filename_pattern
 --- @field scan fun(config: {home_dir: string|nil}): blink.cmp.CompletionItem[]
 --- @field trigger_characters string[]|nil Defaults to { "/", ":" }
 
@@ -55,9 +56,12 @@ function M.make(opts)
       end
 
       local filename = vim.api.nvim_buf_get_name(bufnr)
-      local basename = vim.fn.fnamemodify(filename, ":t")
+      if opts.path_pattern then
+         return filename:match(opts.path_pattern) ~= nil
+      end
 
-      return basename:match(opts.filename_pattern) ~= nil
+      local basename = vim.fn.fnamemodify(filename, ":t")
+      return opts.filename_pattern ~= nil and basename:match(opts.filename_pattern) ~= nil
    end
 
    --- Get cached completion items, loading them if necessary
